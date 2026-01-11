@@ -2,7 +2,7 @@
 
 Provides the main dashboard view with projects organized by deadline urgency.
 """
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, render_template
 
 from app.services import project_service
 
@@ -45,21 +45,19 @@ def _get_dashboard_data() -> dict:
 @dashboard_bp.route('/')
 @dashboard_bp.route('/dashboard')
 def dashboard():
-    """Get dashboard data with projects organized by deadline urgency.
+    """Render dashboard page with projects organized by deadline urgency.
 
-    Note: This route currently returns JSON. Sprint 3.2 will modify this
-    to render an HTML template per the HTMX pattern in SPEC.md.
-
-    Returns JSON with four project lists:
-    - overdue: Past delivery deadline
-    - due_this_week: Delivery deadline within 7 days
-    - longer_deadline: Delivery deadline beyond 7 days
-    - recently_completed: Last 10 completed projects
+    Displays four sections:
+    - Overdue: Past delivery deadline (red/danger styling)
+    - Due This Week: Delivery deadline within 7 days (amber/warning styling)
+    - Longer Deadline: Delivery deadline beyond 7 days (neutral styling)
+    - Recently Completed: Last 10 completed projects (green/success styling)
 
     Returns:
-        JSON object with project lists and counts.
+        Rendered HTML template with project data.
     """
-    return jsonify(_get_dashboard_data())
+    data = _get_dashboard_data()
+    return render_template('dashboard.html', **data)
 
 
 @dashboard_bp.route('/api/dashboard')

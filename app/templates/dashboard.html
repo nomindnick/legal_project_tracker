@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Legal Project Tracker{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row g-4">
+    <!-- Overdue Section -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Overdue</h5>
+                <span class="badge bg-white text-danger">{{ overdue.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if overdue.data %}
+                    {% for project in overdue.data %}
+                        {% include "partials/_project_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No overdue projects. Great job!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Due This Week Section -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Due This Week</h5>
+                <span class="badge bg-dark">{{ due_this_week.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if due_this_week.data %}
+                    {% for project in due_this_week.data %}
+                        {% include "partials/_project_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No projects due this week.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Longer Deadline Section -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Longer Deadline</h5>
+                <span class="badge bg-white text-secondary">{{ longer_deadline.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if longer_deadline.data %}
+                    {% for project in longer_deadline.data %}
+                        {% include "partials/_project_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No projects with longer deadlines.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently Completed Section -->
+    <div class="col-12 col-lg-6">
+        <div class="card border-success">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #d1e7dd;">
+                <h5 class="mb-0 text-success">Recently Completed</h5>
+                <span class="badge bg-success">{{ recently_completed.count }}</span>
+            </div>
+            <div class="card-body">
+                {% if recently_completed.data %}
+                    {% for project in recently_completed.data %}
+                        {% include "partials/_project_card.html" %}
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No recently completed projects.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
