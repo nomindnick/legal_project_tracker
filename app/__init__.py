@@ -38,7 +38,8 @@ def create_app(config_class: type = Config) -> Flask:
     from app import models  # noqa: F401
 
     # Register blueprints
-    # (Will be added in later sprints as routes are created)
+    from app.routes import register_blueprints
+    register_blueprints(app)
 
     # Simple health check route
     @app.route('/health')
