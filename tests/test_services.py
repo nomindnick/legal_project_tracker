@@ -636,7 +636,6 @@ class TestAppendNote:
         with app.app_context():
             sample_project_data['notes'] = None
             created = create_project(sample_project_data)
-            before_append = datetime.utcnow()
             result = append_note(created.id, 'Test note')
 
             # Note should be in format [YYYY-MM-DD HH:MM]: content

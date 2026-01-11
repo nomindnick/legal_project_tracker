@@ -6,12 +6,12 @@ being tracked in the system.
 from datetime import datetime, timezone
 from typing import Optional
 
+from app import db
+
 
 def _utcnow():
     """Return current UTC time as timezone-aware datetime."""
     return datetime.now(timezone.utc)
-
-from app import db
 
 
 class ProjectStatus:
