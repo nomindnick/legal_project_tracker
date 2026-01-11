@@ -681,3 +681,30 @@ class TestDashboardRoute:
         assert data['due_this_week']['count'] == 2
         assert data['longer_deadline']['count'] == 1
         assert data['recently_completed']['count'] == 1
+
+    def test_dashboard_api_endpoint(self, client):
+        """API endpoint /api/dashboard returns same data as /dashboard."""
+        response = client.get('/api/dashboard')
+        assert response.status_code == 200
+        data = response.get_json()
+
+        # Verify structure matches main dashboard endpoint
+        assert 'overdue' in data
+        assert 'due_this_week' in data
+        assert 'longer_deadline' in data
+        assert 'recently_completed' in data
+
+    def test_dashboard_api_with_data(self, client, create_project):
+        """API endpoint correctly returns project data."""
+        yesterday = date.today() - timedelta(days=1)
+        create_project(
+            project_name='Overdue Project',
+            delivery_deadline=yesterday,
+            status=ProjectStatus.IN_PROGRESS
+        )
+
+        response = client.get('/api/dashboard')
+        data = response.get_json()
+
+        assert data['overdue']['count'] == 1
+        assert data['overdue']['data'][0]['project_name'] == 'Overdue Project'

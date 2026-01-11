@@ -204,6 +204,8 @@ This plan organizes development into seven phases, progressing from foundation t
 
 **Sprint Update:**
 > **Completed 2026-01-11** - All tasks completed successfully. Added 4 dashboard service functions to project_service.py: get_overdue_projects, get_due_this_week, get_longer_deadline, and get_recently_completed. Created dashboard.py blueprint with GET / and GET /dashboard routes returning JSON with four project sections. Added 21 new service tests (TestDashboardFunctions) and 8 new route tests (TestDashboardRoute). All 133 tests pass (14 model + 66 service + 53 route). Projects with NULL delivery_deadline are excluded from deadline-based queries.
+>
+> **Note for Sprint 3.2:** Current routes return JSON. Per SPEC.md HTMX pattern ("Filter/sort operations return HTML fragments, not JSON"), Sprint 3.2 should modify GET / and GET /dashboard to render HTML templates. A separate GET /api/dashboard endpoint has been added to preserve JSON access for testing and potential future API consumers.
 
 ---
 
