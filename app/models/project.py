@@ -3,8 +3,13 @@
 This module defines the Project model which represents a legal project
 being tracked in the system.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
+
+
+def _utcnow():
+    """Return current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 from app import db
 
@@ -82,13 +87,13 @@ class Project(db.Model):
     created_at: datetime = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow
+        default=_utcnow
     )
     updated_at: datetime = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=_utcnow,
+        onupdate=_utcnow
     )
 
     # Soft delete
