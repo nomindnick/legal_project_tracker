@@ -14,6 +14,8 @@ def register_blueprints(app: Flask) -> None:
     Args:
         app: The Flask application instance.
     """
+    from app.routes.dashboard import dashboard_bp
     from app.routes.projects import projects_bp
 
+    app.register_blueprint(dashboard_bp)
     app.register_blueprint(projects_bp)

@@ -16,6 +16,10 @@ from app.services import (
     delete_project,
     append_note,
     get_distinct_values,
+    get_overdue_projects,
+    get_due_this_week,
+    get_longer_deadline,
+    get_recently_completed,
 )
 
 
@@ -1016,3 +1020,242 @@ class TestEdgeCases:
             with pytest.raises(ValueError) as excinfo:
                 update_project(created.id, {'status': 'BadStatus'})
             assert 'Invalid status' in str(excinfo.value)
+
+
+class TestDashboardFunctions:
+    """Tests for dashboard service functions."""
+
+    def _create_project_with_deadline(self, deadline, status=ProjectStatus.IN_PROGRESS):
+        """Helper to create a project with specific deadline and status."""
+        return create_project({
+            'project_name': f'Project {deadline}',
+            'department': 'Public Works',
+            'date_to_client': date(2026, 1, 1),
+            'date_assigned_to_us': date(2026, 1, 5),
+            'assigned_attorney': 'John Smith',
+            'qcp_attorney': 'Jane Doe',
+            'delivery_deadline': deadline,
+            'status': status,
+        })
+
+    def test_get_overdue_projects_finds_past_deadline(self, app):
+        """Projects with delivery_deadline in the past are overdue."""
+        with app.app_context():
+            yesterday = date.today() - timedelta(days=1)
+            self._create_project_with_deadline(yesterday)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 1
+            assert overdue[0].delivery_deadline == yesterday
+
+    def test_get_overdue_projects_excludes_future_deadline(self, app):
+        """Projects with future deadline are not overdue."""
+        with app.app_context():
+            tomorrow = date.today() + timedelta(days=1)
+            self._create_project_with_deadline(tomorrow)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 0
+
+    def test_get_overdue_projects_excludes_completed(self, app):
+        """Completed projects are not shown as overdue."""
+        with app.app_context():
+            yesterday = date.today() - timedelta(days=1)
+            self._create_project_with_deadline(yesterday, ProjectStatus.COMPLETED)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 0
+
+    def test_get_overdue_projects_excludes_deleted(self, app):
+        """Soft-deleted projects are not shown as overdue."""
+        with app.app_context():
+            yesterday = date.today() - timedelta(days=1)
+            project = self._create_project_with_deadline(yesterday)
+            delete_project(project.id)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 0
+
+    def test_get_overdue_projects_excludes_null_deadline(self, app):
+        """Projects without delivery_deadline are not overdue."""
+        with app.app_context():
+            self._create_project_with_deadline(None)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 0
+
+    def test_get_overdue_projects_orders_by_deadline_asc(self, app):
+        """Overdue projects are ordered by deadline ascending (most overdue first)."""
+        with app.app_context():
+            three_days_ago = date.today() - timedelta(days=3)
+            one_day_ago = date.today() - timedelta(days=1)
+            self._create_project_with_deadline(one_day_ago)
+            self._create_project_with_deadline(three_days_ago)
+
+            overdue = get_overdue_projects()
+            assert len(overdue) == 2
+            assert overdue[0].delivery_deadline == three_days_ago
+            assert overdue[1].delivery_deadline == one_day_ago
+
+    def test_get_due_this_week_finds_upcoming(self, app):
+        """Projects due within 7 days are found."""
+        with app.app_context():
+            in_three_days = date.today() + timedelta(days=3)
+            self._create_project_with_deadline(in_three_days)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 1
+            assert due_this_week[0].delivery_deadline == in_three_days
+
+    def test_get_due_this_week_includes_today(self, app):
+        """Projects due today are included in due this week."""
+        with app.app_context():
+            today = date.today()
+            self._create_project_with_deadline(today)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 1
+
+    def test_get_due_this_week_includes_day_seven(self, app):
+        """Projects due exactly 7 days from now are included."""
+        with app.app_context():
+            in_seven_days = date.today() + timedelta(days=7)
+            self._create_project_with_deadline(in_seven_days)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 1
+
+    def test_get_due_this_week_excludes_overdue(self, app):
+        """Overdue projects are not included in due this week."""
+        with app.app_context():
+            yesterday = date.today() - timedelta(days=1)
+            self._create_project_with_deadline(yesterday)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 0
+
+    def test_get_due_this_week_excludes_beyond_seven_days(self, app):
+        """Projects due beyond 7 days are not in due this week."""
+        with app.app_context():
+            in_eight_days = date.today() + timedelta(days=8)
+            self._create_project_with_deadline(in_eight_days)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 0
+
+    def test_get_due_this_week_excludes_completed(self, app):
+        """Completed projects are not included in due this week."""
+        with app.app_context():
+            in_three_days = date.today() + timedelta(days=3)
+            self._create_project_with_deadline(in_three_days, ProjectStatus.COMPLETED)
+
+            due_this_week = get_due_this_week()
+            assert len(due_this_week) == 0
+
+    def test_get_longer_deadline_finds_future(self, app):
+        """Projects due beyond 7 days are found."""
+        with app.app_context():
+            in_ten_days = date.today() + timedelta(days=10)
+            self._create_project_with_deadline(in_ten_days)
+
+            longer = get_longer_deadline()
+            assert len(longer) == 1
+            assert longer[0].delivery_deadline == in_ten_days
+
+    def test_get_longer_deadline_excludes_this_week(self, app):
+        """Projects due within 7 days are not in longer deadline."""
+        with app.app_context():
+            in_five_days = date.today() + timedelta(days=5)
+            self._create_project_with_deadline(in_five_days)
+
+            longer = get_longer_deadline()
+            assert len(longer) == 0
+
+    def test_get_longer_deadline_excludes_day_seven(self, app):
+        """Projects due exactly 7 days from now are NOT in longer deadline."""
+        with app.app_context():
+            in_seven_days = date.today() + timedelta(days=7)
+            self._create_project_with_deadline(in_seven_days)
+
+            longer = get_longer_deadline()
+            assert len(longer) == 0
+
+    def test_get_longer_deadline_excludes_completed(self, app):
+        """Completed projects are not in longer deadline."""
+        with app.app_context():
+            in_ten_days = date.today() + timedelta(days=10)
+            self._create_project_with_deadline(in_ten_days, ProjectStatus.COMPLETED)
+
+            longer = get_longer_deadline()
+            assert len(longer) == 0
+
+    def test_get_recently_completed_finds_completed(self, app):
+        """Recently completed finds completed projects."""
+        with app.app_context():
+            today = date.today()
+            self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
+
+            completed = get_recently_completed()
+            assert len(completed) == 1
+            assert completed[0].status == ProjectStatus.COMPLETED
+
+    def test_get_recently_completed_excludes_in_progress(self, app):
+        """In progress projects are not in recently completed."""
+        with app.app_context():
+            today = date.today()
+            self._create_project_with_deadline(today, ProjectStatus.IN_PROGRESS)
+
+            completed = get_recently_completed()
+            assert len(completed) == 0
+
+    def test_get_recently_completed_orders_by_updated_at(self, app):
+        """Recently completed returns projects ordered by updated_at desc."""
+        with app.app_context():
+            today = date.today()
+            # Create two completed projects
+            project1 = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
+            project2 = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
+
+            # Update project1 to make it more recent
+            from app.services import update_project
+            update_project(project1.id, {'project_name': 'Updated Project'})
+
+            completed = get_recently_completed()
+            assert len(completed) == 2
+            # project1 was updated more recently, so it should be first
+            assert completed[0].id == project1.id
+
+    def test_get_recently_completed_respects_limit(self, app):
+        """Recently completed respects the limit parameter."""
+        with app.app_context():
+            today = date.today()
+            # Create 15 completed projects
+            for i in range(15):
+                create_project({
+                    'project_name': f'Completed Project {i}',
+                    'department': 'Public Works',
+                    'date_to_client': date(2026, 1, 1),
+                    'date_assigned_to_us': date(2026, 1, 5),
+                    'assigned_attorney': 'John Smith',
+                    'qcp_attorney': 'Jane Doe',
+                    'delivery_deadline': today,
+                    'status': ProjectStatus.COMPLETED,
+                })
+
+            # Default limit is 10
+            completed = get_recently_completed()
+            assert len(completed) == 10
+
+            # Custom limit
+            completed_5 = get_recently_completed(limit=5)
+            assert len(completed_5) == 5
+
+    def test_get_recently_completed_excludes_deleted(self, app):
+        """Soft-deleted completed projects are excluded."""
+        with app.app_context():
+            today = date.today()
+            project = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
+            delete_project(project.id)
+
+            completed = get_recently_completed()
+            assert len(completed) == 0

@@ -4,7 +4,7 @@ This module provides the service layer for project CRUD operations,
 implementing soft delete, soft normalization, filtering, and sorting.
 Routes call these functions; they interact with models and database.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import func
@@ -335,3 +335,113 @@ def append_note(id: int, note: str) -> Optional[Project]:
 
     db.session.commit()
     return project
+
+
+# ============================================================================
+# Dashboard Functions
+# ============================================================================
+
+def get_overdue_projects() -> list[Project]:
+    """Get projects past their delivery deadline.
+
+    Returns projects where:
+    - delivery_deadline < today
+    - status != Completed
+    - Not soft-deleted
+
+    Projects are ordered by delivery_deadline ascending (most overdue first).
+
+    Returns:
+        List of overdue Project instances.
+    """
+    today = datetime.now(timezone.utc).date()
+
+    return (
+        db.session.query(Project)
+        .filter(Project.deleted_at.is_(None))
+        .filter(Project.delivery_deadline.isnot(None))
+        .filter(Project.delivery_deadline < today)
+        .filter(Project.status != ProjectStatus.COMPLETED)
+        .order_by(Project.delivery_deadline.asc())
+        .all()
+    )
+
+
+def get_due_this_week() -> list[Project]:
+    """Get projects due within the next 7 days.
+
+    Returns projects where:
+    - today <= delivery_deadline <= today + 7 days
+    - status != Completed
+    - Not soft-deleted
+
+    Projects are ordered by delivery_deadline ascending.
+
+    Returns:
+        List of Project instances due this week.
+    """
+    today = datetime.now(timezone.utc).date()
+    week_from_now = today + timedelta(days=7)
+
+    return (
+        db.session.query(Project)
+        .filter(Project.deleted_at.is_(None))
+        .filter(Project.delivery_deadline.isnot(None))
+        .filter(Project.delivery_deadline >= today)
+        .filter(Project.delivery_deadline <= week_from_now)
+        .filter(Project.status != ProjectStatus.COMPLETED)
+        .order_by(Project.delivery_deadline.asc())
+        .all()
+    )
+
+
+def get_longer_deadline() -> list[Project]:
+    """Get projects with deadlines beyond 7 days.
+
+    Returns projects where:
+    - delivery_deadline > today + 7 days
+    - status != Completed
+    - Not soft-deleted
+
+    Projects are ordered by delivery_deadline ascending.
+
+    Returns:
+        List of Project instances with longer deadlines.
+    """
+    today = datetime.now(timezone.utc).date()
+    week_from_now = today + timedelta(days=7)
+
+    return (
+        db.session.query(Project)
+        .filter(Project.deleted_at.is_(None))
+        .filter(Project.delivery_deadline.isnot(None))
+        .filter(Project.delivery_deadline > week_from_now)
+        .filter(Project.status != ProjectStatus.COMPLETED)
+        .order_by(Project.delivery_deadline.asc())
+        .all()
+    )
+
+
+def get_recently_completed(limit: int = 10) -> list[Project]:
+    """Get recently completed projects.
+
+    Returns projects where:
+    - status == Completed
+    - Not soft-deleted
+
+    Projects are ordered by updated_at descending (most recently completed first).
+
+    Args:
+        limit: Maximum number of projects to return (default: 10).
+
+    Returns:
+        List of recently completed Project instances.
+    """
+    return (
+        db.session.query(Project)
+        .filter(Project.deleted_at.is_(None))
+        .filter(Project.status == ProjectStatus.COMPLETED)
+        .order_by(Project.updated_at.desc())
+        .limit(limit)
+        .all()
+    )

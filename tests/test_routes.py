@@ -558,3 +558,153 @@ class TestAutocomplete:
         data = response.get_json()
         assert 'Active Dept' in data['data']
         assert 'Deleted Dept' not in data['data']
+
+
+# ============================================================================
+# Dashboard Route Tests
+# ============================================================================
+
+class TestDashboardRoute:
+    """Tests for dashboard route."""
+
+    def test_dashboard_returns_200(self, client):
+        """Dashboard route returns 200 status."""
+        response = client.get('/dashboard')
+        assert response.status_code == 200
+
+    def test_dashboard_root_route(self, client):
+        """Root route (/) also returns dashboard data."""
+        response = client.get('/')
+        assert response.status_code == 200
+
+    def test_dashboard_returns_all_sections(self, client):
+        """Dashboard returns all four project sections."""
+        response = client.get('/dashboard')
+        assert response.status_code == 200
+        data = response.get_json()
+
+        # Verify all sections exist
+        assert 'overdue' in data
+        assert 'due_this_week' in data
+        assert 'longer_deadline' in data
+        assert 'recently_completed' in data
+
+        # Verify structure of each section
+        for section in ['overdue', 'due_this_week', 'longer_deadline', 'recently_completed']:
+            assert 'data' in data[section]
+            assert 'count' in data[section]
+            assert isinstance(data[section]['data'], list)
+            assert isinstance(data[section]['count'], int)
+
+    def test_dashboard_categorizes_overdue(self, client, create_project):
+        """Dashboard correctly identifies overdue projects."""
+        yesterday = date.today() - timedelta(days=1)
+        create_project(
+            project_name='Overdue Project',
+            delivery_deadline=yesterday,
+            status=ProjectStatus.IN_PROGRESS
+        )
+
+        response = client.get('/dashboard')
+        data = response.get_json()
+
+        assert data['overdue']['count'] == 1
+        assert data['overdue']['data'][0]['project_name'] == 'Overdue Project'
+        assert data['due_this_week']['count'] == 0
+
+    def test_dashboard_categorizes_due_this_week(self, client, create_project):
+        """Dashboard correctly identifies projects due this week."""
+        in_three_days = date.today() + timedelta(days=3)
+        create_project(
+            project_name='Due Soon',
+            delivery_deadline=in_three_days,
+            status=ProjectStatus.IN_PROGRESS
+        )
+
+        response = client.get('/dashboard')
+        data = response.get_json()
+
+        assert data['due_this_week']['count'] == 1
+        assert data['due_this_week']['data'][0]['project_name'] == 'Due Soon'
+        assert data['overdue']['count'] == 0
+
+    def test_dashboard_categorizes_longer_deadline(self, client, create_project):
+        """Dashboard correctly identifies projects with longer deadlines."""
+        in_ten_days = date.today() + timedelta(days=10)
+        create_project(
+            project_name='Future Project',
+            delivery_deadline=in_ten_days,
+            status=ProjectStatus.IN_PROGRESS
+        )
+
+        response = client.get('/dashboard')
+        data = response.get_json()
+
+        assert data['longer_deadline']['count'] == 1
+        assert data['longer_deadline']['data'][0]['project_name'] == 'Future Project'
+
+    def test_dashboard_categorizes_completed(self, client, create_project):
+        """Dashboard correctly identifies completed projects."""
+        create_project(
+            project_name='Done Project',
+            delivery_deadline=date.today(),
+            status=ProjectStatus.COMPLETED
+        )
+
+        response = client.get('/dashboard')
+        data = response.get_json()
+
+        assert data['recently_completed']['count'] == 1
+        assert data['recently_completed']['data'][0]['project_name'] == 'Done Project'
+        # Completed should not appear in other sections
+        assert data['overdue']['count'] == 0
+        assert data['due_this_week']['count'] == 0
+        assert data['longer_deadline']['count'] == 0
+
+    def test_dashboard_with_mixed_projects(self, client, create_project):
+        """Dashboard correctly categorizes multiple projects."""
+        yesterday = date.today() - timedelta(days=1)
+        in_three_days = date.today() + timedelta(days=3)
+        in_ten_days = date.today() + timedelta(days=10)
+
+        create_project(project_name='Overdue', delivery_deadline=yesterday)
+        create_project(project_name='Due Soon 1', delivery_deadline=in_three_days)
+        create_project(project_name='Due Soon 2', delivery_deadline=in_three_days)
+        create_project(project_name='Future', delivery_deadline=in_ten_days)
+        create_project(project_name='Done', delivery_deadline=in_three_days,
+                      status=ProjectStatus.COMPLETED)
+
+        response = client.get('/dashboard')
+        data = response.get_json()
+
+        assert data['overdue']['count'] == 1
+        assert data['due_this_week']['count'] == 2
+        assert data['longer_deadline']['count'] == 1
+        assert data['recently_completed']['count'] == 1
+
+    def test_dashboard_api_endpoint(self, client):
+        """API endpoint /api/dashboard returns same data as /dashboard."""
+        response = client.get('/api/dashboard')
+        assert response.status_code == 200
+        data = response.get_json()
+
+        # Verify structure matches main dashboard endpoint
+        assert 'overdue' in data
+        assert 'due_this_week' in data
+        assert 'longer_deadline' in data
+        assert 'recently_completed' in data
+
+    def test_dashboard_api_with_data(self, client, create_project):
+        """API endpoint correctly returns project data."""
+        yesterday = date.today() - timedelta(days=1)
+        create_project(
+            project_name='Overdue Project',
+            delivery_deadline=yesterday,
+            status=ProjectStatus.IN_PROGRESS
+        )
+
+        response = client.get('/api/dashboard')
+        data = response.get_json()
+
+        assert data['overdue']['count'] == 1
+        assert data['overdue']['data'][0]['project_name'] == 'Overdue Project'
