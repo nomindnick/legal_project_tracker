@@ -117,17 +117,17 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** HTTP routes that call service layer. RESTful endpoints for projects.
 
 **Tasks:**
-- [ ] Create `app/routes/__init__.py` with blueprint registration helper
-- [ ] Create `app/routes/projects.py` with Flask blueprint:
+- [x] Create `app/routes/__init__.py` with blueprint registration helper
+- [x] Create `app/routes/projects.py` with Flask blueprint:
   - `GET /projects` - list all (with query params for filters/sort)
   - `GET /projects/<id>` - single project
   - `POST /projects` - create new
   - `PUT /projects/<id>` - update existing
   - `DELETE /projects/<id>` - delete project
   - `GET /api/autocomplete/<field>` - distinct values for autocomplete
-- [ ] Register blueprint in app factory
-- [ ] Add proper error handling (400 for bad input, 404 for not found)
-- [ ] Create `tests/test_routes.py` with route tests using Flask test client
+- [x] Register blueprint in app factory
+- [x] Add proper error handling (400 for bad input, 404 for not found)
+- [x] Create `tests/test_routes.py` with route tests using Flask test client
 
 **Acceptance Criteria:**
 - All endpoints return correct status codes
@@ -139,7 +139,7 @@ This plan organizes development into seven phases, progressing from foundation t
 - `pytest tests/test_routes.py` passes
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-11** - All tasks completed successfully. Created projects blueprint with 6 RESTful endpoints: GET/POST /projects, GET/PUT/DELETE /projects/<id>, and GET /api/autocomplete/<field>. Added register_blueprints() helper in routes/__init__.py. Implemented comprehensive query parameter handling for filtering (status, department, attorneys, date ranges, include_completed, include_deleted) and sorting. Also added POST /projects/<id>/notes endpoint for append-only notes (ahead of Sprint 4.3 schedule). Created 47 route tests covering all endpoints and edge cases. All 104 tests pass (14 model + 43 service + 47 route).
 
 ---
 
