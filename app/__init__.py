@@ -34,6 +34,9 @@ def create_app(config_class: type = Config) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Import models so that Flask-Migrate can detect them
+    from app import models  # noqa: F401
+
     # Register blueprints
     # (Will be added in later sprints as routes are created)
 
