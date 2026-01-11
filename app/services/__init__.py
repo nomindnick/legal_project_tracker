@@ -12,6 +12,10 @@ from app.services.project_service import (
     delete_project,
     append_note,
     get_distinct_values,
+    get_overdue_projects,
+    get_due_this_week,
+    get_longer_deadline,
+    get_recently_completed,
 )
 
 __all__ = [
@@ -22,4 +26,8 @@ __all__ = [
     'delete_project',
     'append_note',
     'get_distinct_values',
+    'get_overdue_projects',
+    'get_due_this_week',
+    'get_longer_deadline',
+    'get_recently_completed',
 ]
