@@ -49,15 +49,15 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Create Project model, set up Alembic, run initial migration.
 
 **Tasks:**
-- [ ] Create `app/models/__init__.py` that imports and exposes all models
-- [ ] Create `app/models/project.py` with Project model matching SPEC.md data model
-- [ ] Configure Flask-SQLAlchemy in app factory
-- [ ] Initialize Alembic (`flask db init` or `alembic init migrations`)
-- [ ] Create initial migration for projects table
-- [ ] Apply migration to create table
-- [ ] Create `tests/conftest.py` with pytest fixtures for test database
+- [x] Create `app/models/__init__.py` that imports and exposes all models
+- [x] Create `app/models/project.py` with Project model matching SPEC.md data model
+- [x] Configure Flask-SQLAlchemy in app factory
+- [x] Initialize Alembic (`flask db init` or `alembic init migrations`)
+- [x] Create initial migration for projects table
+- [x] Apply migration to create table
+- [x] Create `tests/conftest.py` with pytest fixtures for test database
   - **Important:** Configure separate test database (SQLite in-memory or `test_` prefixed DB) to avoid wiping dev data during test runs
-- [ ] Create `tests/test_models.py` with basic model tests
+- [x] Create `tests/test_models.py` with basic model tests
 
 **Acceptance Criteria:**
 - `flask db upgrade` runs without errors
@@ -67,7 +67,7 @@ This plan organizes development into seven phases, progressing from foundation t
 - Test database is isolated from development database (verified by checking test fixtures)
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-10** - All tasks completed successfully. Created Project model with all fields from SPEC.md including soft delete support via deleted_at timestamp. Initialized Flask-Migrate and created initial migration for projects table. Set up pytest fixtures with isolated in-memory SQLite test database to avoid affecting dev data. All 14 model tests pass. Database table verified to contain all required columns: id, project_name, project_group, department, date_to_client, date_assigned_to_us, assigned_attorney, qcp_attorney, internal_deadline, delivery_deadline, status, notes, created_at, updated_at, deleted_at.
 
 ---
 
