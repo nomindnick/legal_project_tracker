@@ -82,8 +82,8 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Implement service layer for project CRUD operations.
 
 **Tasks:**
-- [ ] Create `app/services/__init__.py`
-- [ ] Create `app/services/project_service.py` with functions:
+- [x] Create `app/services/__init__.py`
+- [x] Create `app/services/project_service.py` with functions:
   - `create_project(data: dict) -> Project`
   - `get_project(id: int) -> Project | None` (excludes soft-deleted)
   - `get_all_projects(filters: dict = None) -> list[Project]` (excludes soft-deleted by default)
@@ -91,10 +91,10 @@ This plan organizes development into seven phases, progressing from foundation t
   - `delete_project(id: int) -> bool` (soft delete: sets deleted_at timestamp)
   - `append_note(id: int, note: str) -> Project` (appends with timestamp format: `[YYYY-MM-DD HH:MM]: note`)
   - `get_distinct_values(field: str) -> list[str]` (for autocomplete)
-- [ ] Implement **soft normalization** in create/update: when saving department, assigned_attorney, or qcp_attorney, check for case-insensitive match to existing value and use canonical version
-- [ ] Implement filtering in `get_all_projects`: by status, department, assigned_attorney, qcp_attorney, date ranges
-- [ ] Implement sorting in `get_all_projects`: by any field, ascending or descending
-- [ ] Create `tests/test_services.py` with comprehensive tests for each function
+- [x] Implement **soft normalization** in create/update: when saving department, assigned_attorney, or qcp_attorney, check for case-insensitive match to existing value and use canonical version
+- [x] Implement filtering in `get_all_projects`: by status, department, assigned_attorney, qcp_attorney, date ranges
+- [x] Implement sorting in `get_all_projects`: by any field, ascending or descending
+- [x] Create `tests/test_services.py` with comprehensive tests for each function
 
 **Acceptance Criteria:**
 - All service functions work correctly (verified by tests)
@@ -106,7 +106,7 @@ This plan organizes development into seven phases, progressing from foundation t
 - Soft normalization: saving "public works" when "Public Works" exists results in "Public Works"
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-11** - All tasks completed successfully. Created project_service.py with 7 service functions: create_project, get_project, get_all_projects, update_project, delete_project, append_note, and get_distinct_values. Implemented soft normalization for department, assigned_attorney, and qcp_attorney fields. Added comprehensive filtering (status, department, attorneys, date ranges) and sorting (any field, asc/desc with nulls-last). Created 43 tests covering all functionality. All 57 tests pass (14 model + 43 service).
 
 ---
 
