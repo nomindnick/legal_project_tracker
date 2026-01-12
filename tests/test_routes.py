@@ -731,3 +731,244 @@ class TestDashboardRoute:
         assert data['due_this_week']['count'] == 2
         assert data['longer_deadline']['count'] == 1
         assert data['recently_completed']['count'] == 1
+
+
+# ============================================================================
+# GET /projects Search Tests
+# ============================================================================
+
+class TestProjectSearch:
+    """Tests for search functionality in GET /projects."""
+
+    def test_search_single_term(self, client, create_project):
+        """Search with single term finds matching projects."""
+        create_project(project_name='Municipal Code Review')
+        create_project(project_name='Budget Analysis')
+
+        response = client.get('/projects?search=Municipal')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert data['data'][0]['project_name'] == 'Municipal Code Review'
+
+    def test_search_multi_term(self, client, create_project):
+        """Search with multiple terms uses AND logic."""
+        # Note: search only covers project_name, department, notes, project_group
+        create_project(
+            project_name='HR Policy Review',
+            department='Public Works',
+            notes='Smith consulted on this'
+        )
+        create_project(
+            project_name='Budget Analysis',
+            notes='Smith involved'
+        )
+        create_project(
+            project_name='HR Compliance',
+            department='Finance'
+        )
+
+        # "hr" in project_name, "smith" in notes
+        response = client.get('/projects?search=smith+hr')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert data['data'][0]['project_name'] == 'HR Policy Review'
+
+    def test_search_case_insensitive(self, client, create_project):
+        """Search is case-insensitive."""
+        create_project(project_name='Public Works Review')
+
+        # Test uppercase
+        response = client.get('/projects?search=PUBLIC')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+
+        # Test lowercase
+        response = client.get('/projects?search=public')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+
+    def test_search_by_department(self, client, create_project):
+        """Search finds projects matching department."""
+        create_project(department='Finance')
+        create_project(department='Public Works')
+
+        response = client.get('/projects?search=Finance')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert data['data'][0]['department'] == 'Finance'
+
+    def test_search_by_notes(self, client, create_project):
+        """Search finds projects matching notes."""
+        create_project(notes='Meeting with client on Thursday')
+        create_project(notes='Reviewed documents')
+
+        response = client.get('/projects?search=Thursday')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert 'Thursday' in data['data'][0]['notes']
+
+    def test_search_by_project_group(self, client, create_project):
+        """Search finds projects matching project_group."""
+        create_project(project_group='Q4 Public Records')
+        create_project(project_group='Municipal Updates')
+
+        response = client.get('/projects?search=Records')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert data['data'][0]['project_group'] == 'Q4 Public Records'
+
+    def test_search_no_match(self, client, create_project):
+        """Search with no matches returns empty list."""
+        create_project(project_name='Budget Analysis')
+
+        response = client.get('/projects?search=nonexistent')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 0
+
+    def test_search_combined_with_filters(self, client, create_project):
+        """Search can be combined with other filters."""
+        create_project(
+            project_name='Public Works Contract',
+            status=ProjectStatus.IN_PROGRESS
+        )
+        create_project(
+            project_name='Public Health Contract',
+            status=ProjectStatus.COMPLETED
+        )
+
+        response = client.get('/projects?search=Contract&status=In+Progress&include_completed=true')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['count'] == 1
+        assert data['data'][0]['project_name'] == 'Public Works Contract'
+
+
+# ============================================================================
+# Projects HTML Page Routes Tests
+# ============================================================================
+
+class TestProjectsHtmlRoutes:
+    """Tests for HTML page routes for projects."""
+
+    def test_projects_page_returns_200(self, client):
+        """Projects page returns 200 status."""
+        response = client.get('/projects/page')
+        assert response.status_code == 200
+
+    def test_projects_page_returns_html(self, client):
+        """Projects page returns HTML content type."""
+        response = client.get('/projects/page')
+        assert response.status_code == 200
+        assert response.content_type.startswith('text/html')
+
+    def test_projects_page_contains_table(self, client):
+        """Projects page contains table element."""
+        response = client.get('/projects/page')
+        html = response.data.decode('utf-8')
+        assert '<table' in html
+        assert 'projects-table' in html
+
+    def test_projects_page_displays_projects(self, client, create_project):
+        """Projects page displays project data."""
+        create_project(project_name='Test Project ABC', department='Test Dept')
+
+        response = client.get('/projects/page')
+        html = response.data.decode('utf-8')
+
+        assert 'Test Project ABC' in html
+        assert 'Test Dept' in html
+
+    def test_projects_page_with_search(self, client, create_project):
+        """Projects page filters with search param."""
+        create_project(project_name='Municipal Review')
+        create_project(project_name='Budget Analysis')
+
+        response = client.get('/projects/page?search=Municipal')
+        html = response.data.decode('utf-8')
+
+        assert 'Municipal Review' in html
+        # Budget should not appear
+        assert 'Budget Analysis' not in html
+
+    def test_projects_page_with_filters(self, client, create_project):
+        """Projects page applies filters."""
+        create_project(project_name='Finance Project', department='Finance')
+        create_project(project_name='HR Project', department='Human Resources')
+
+        response = client.get('/projects/page?department=Finance')
+        html = response.data.decode('utf-8')
+
+        assert 'Finance Project' in html
+        assert 'HR Project' not in html
+
+    def test_projects_table_rows_returns_200(self, client):
+        """Projects table rows partial returns 200."""
+        response = client.get('/projects/table_rows')
+        assert response.status_code == 200
+
+    def test_projects_table_rows_returns_html(self, client):
+        """Projects table rows returns HTML content type."""
+        response = client.get('/projects/table_rows')
+        assert response.status_code == 200
+        assert response.content_type.startswith('text/html')
+
+    def test_projects_table_rows_is_partial(self, client, create_project):
+        """Projects table rows returns partial HTML (no full page)."""
+        create_project(project_name='Test Project')
+
+        response = client.get('/projects/table_rows')
+        html = response.data.decode('utf-8')
+
+        # Should contain table row data
+        assert '<tr' in html
+        # Should NOT contain full page structure
+        assert '<!DOCTYPE' not in html
+        assert '<head>' not in html
+
+    def test_projects_table_rows_with_search(self, client, create_project):
+        """Projects table rows filters with search."""
+        create_project(project_name='Municipal Review')
+        create_project(project_name='Budget Analysis')
+
+        response = client.get('/projects/table_rows?search=Municipal')
+        html = response.data.decode('utf-8')
+
+        assert 'Municipal Review' in html
+        assert 'Budget Analysis' not in html
+
+    def test_projects_table_rows_empty_state(self, client):
+        """Projects table rows shows empty state message."""
+        response = client.get('/projects/table_rows')
+        html = response.data.decode('utf-8')
+
+        assert 'No projects found' in html
+
+    def test_projects_page_excludes_completed_by_default(self, client, create_project):
+        """Projects page excludes completed by default."""
+        create_project(project_name='Active Project', status=ProjectStatus.IN_PROGRESS)
+        create_project(project_name='Done Project', status=ProjectStatus.COMPLETED)
+
+        response = client.get('/projects/page')
+        html = response.data.decode('utf-8')
+
+        assert 'Active Project' in html
+        assert 'Done Project' not in html
+
+    def test_projects_page_includes_completed_when_requested(self, client, create_project):
+        """Projects page includes completed when requested."""
+        create_project(project_name='Active Project', status=ProjectStatus.IN_PROGRESS)
+        create_project(project_name='Done Project', status=ProjectStatus.COMPLETED)
+
+        response = client.get('/projects/page?include_completed=true')
+        html = response.data.decode('utf-8')
+
+        assert 'Active Project' in html
+        assert 'Done Project' in html

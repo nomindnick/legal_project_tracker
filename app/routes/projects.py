@@ -5,7 +5,7 @@ Routes call the service layer; they handle HTTP concerns only.
 """
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, render_template, request
 
 from app.models import ProjectStatus
 from app.services import project_service
@@ -78,6 +78,10 @@ def _build_filters_from_request() -> dict:
         filters['assigned_attorney'] = request.args.get('assigned_attorney')
     if request.args.get('qcp_attorney'):
         filters['qcp_attorney'] = request.args.get('qcp_attorney')
+
+    # Search term (multi-field, multi-term search)
+    if request.args.get('search'):
+        filters['search'] = request.args.get('search')
 
     # Date range filters
     delivery_from = _parse_date(request.args.get('delivery_deadline_from'))
@@ -162,6 +166,8 @@ def get_projects():
         department: Filter by department
         assigned_attorney: Filter by assigned attorney
         qcp_attorney: Filter by QCP attorney
+        search: Multi-term search across project_name, department,
+                notes, project_group (case-insensitive)
         include_completed: Include completed projects (default: false)
         include_deleted: Include soft-deleted projects (default: false)
         delivery_deadline_from: Minimum delivery deadline (YYYY-MM-DD)
@@ -323,3 +329,54 @@ def autocomplete(field: str):
         return jsonify({'data': values})
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+
+
+# ============================================================================
+# HTML Page Routes (for HTMX)
+# ============================================================================
+
+@projects_bp.route('/projects/page')
+def projects_page():
+    """Render the full projects HTML page.
+
+    Supports all query parameters from GET /projects.
+    Provides data for filter dropdowns from autocomplete values.
+
+    Returns:
+        HTML page with projects table and filter controls.
+    """
+    filters = _build_filters_from_request()
+    projects = project_service.get_all_projects(filters)
+
+    # Get distinct values for filter dropdowns
+    statuses = [s for s in ProjectStatus.ALL]
+    departments = project_service.get_distinct_values('department')
+    attorneys = project_service.get_distinct_values('assigned_attorney')
+
+    return render_template(
+        'projects.html',
+        projects=projects,
+        statuses=statuses,
+        departments=departments,
+        attorneys=attorneys,
+        filters=request.args
+    )
+
+
+@projects_bp.route('/projects/table_rows')
+def projects_table_rows():
+    """Return just the table body HTML for HTMX updates.
+
+    Supports all query parameters from GET /projects.
+    Returns a partial HTML fragment for HTMX to swap into the table body.
+
+    Returns:
+        HTML fragment containing table rows.
+    """
+    filters = _build_filters_from_request()
+    projects = project_service.get_all_projects(filters)
+
+    return render_template(
+        'partials/project_table_rows.html',
+        projects=projects
+    )
