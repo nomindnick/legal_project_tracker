@@ -386,6 +386,164 @@ def projects_table_rows():
 
 
 # ============================================================================
+# New Project Form Routes
+# ============================================================================
+
+@projects_bp.route('/projects/new')
+def new_project_form():
+    """Render the new project form HTML page.
+
+    Query Parameters:
+        clone_from: Optional project ID to pre-fill metadata from
+        project_name: Optional pre-filled project name
+        department: Optional pre-filled department
+        assigned_attorney: Optional pre-filled assigned attorney
+        qcp_attorney: Optional pre-filled QCP attorney
+        project_group: Optional pre-filled project group
+
+    Returns:
+        HTML page with new project form.
+    """
+    # Check for clone parameters
+    clone_from = request.args.get('clone_from')
+    is_clone = clone_from is not None
+
+    # Build prefill data from query params
+    prefill = {
+        'project_name': request.args.get('project_name', ''),
+        'department': request.args.get('department', ''),
+        'assigned_attorney': request.args.get('assigned_attorney', ''),
+        'qcp_attorney': request.args.get('qcp_attorney', ''),
+        'project_group': request.args.get('project_group', ''),
+        'date_to_client': request.args.get('date_to_client', ''),
+        'date_assigned_to_us': request.args.get('date_assigned_to_us', ''),
+        'internal_deadline': request.args.get('internal_deadline', ''),
+        'delivery_deadline': request.args.get('delivery_deadline', ''),
+        'notes': request.args.get('notes', ''),
+    }
+
+    # Get distinct values for autocomplete
+    departments = project_service.get_distinct_values('department')
+    attorneys = project_service.get_distinct_values('assigned_attorney')
+    qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
+
+    return render_template(
+        'project_form.html',
+        prefill=prefill,
+        is_clone=is_clone,
+        departments=departments,
+        attorneys=attorneys,
+        qcp_attorneys=qcp_attorneys,
+        today=date.today().strftime('%Y-%m-%d')
+    )
+
+
+@projects_bp.route('/projects/create', methods=['POST'])
+def create_project_form():
+    """Handle new project form submission.
+
+    Processes form data, creates the project, and redirects on success.
+    On validation error, re-renders the form with error message and preserved data.
+
+    Returns:
+        Redirect to projects page on success, or re-render form with errors.
+    """
+    # Parse form data
+    form_data = {
+        'project_name': request.form.get('project_name', '').strip(),
+        'project_group': request.form.get('project_group', '').strip() or None,
+        'department': request.form.get('department', '').strip(),
+        'assigned_attorney': request.form.get('assigned_attorney', '').strip(),
+        'qcp_attorney': request.form.get('qcp_attorney', '').strip(),
+        'status': request.form.get('status', 'In Progress').strip(),
+    }
+
+    # Parse date fields
+    date_fields = ['date_to_client', 'date_assigned_to_us', 'internal_deadline', 'delivery_deadline']
+    date_error = None
+    for field in date_fields:
+        date_str = request.form.get(field, '').strip()
+        if date_str:
+            parsed = _parse_date(date_str)
+            if parsed:
+                form_data[field] = parsed
+            else:
+                date_error = f'Invalid date format for {field.replace("_", " ").title()}'
+                break
+        else:
+            form_data[field] = None
+
+    # Handle initial notes
+    notes = request.form.get('notes', '').strip()
+    if notes:
+        form_data['notes'] = notes
+
+    # If date parse error, re-render form
+    if date_error:
+        prefill = {
+            'project_name': request.form.get('project_name', ''),
+            'project_group': request.form.get('project_group', ''),
+            'department': request.form.get('department', ''),
+            'assigned_attorney': request.form.get('assigned_attorney', ''),
+            'qcp_attorney': request.form.get('qcp_attorney', ''),
+            'date_to_client': request.form.get('date_to_client', ''),
+            'date_assigned_to_us': request.form.get('date_assigned_to_us', ''),
+            'internal_deadline': request.form.get('internal_deadline', ''),
+            'delivery_deadline': request.form.get('delivery_deadline', ''),
+            'notes': request.form.get('notes', ''),
+        }
+        departments = project_service.get_distinct_values('department')
+        attorneys = project_service.get_distinct_values('assigned_attorney')
+        qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
+
+        return render_template(
+            'project_form.html',
+            prefill=prefill,
+            is_clone=False,
+            departments=departments,
+            attorneys=attorneys,
+            qcp_attorneys=qcp_attorneys,
+            today=date.today().strftime('%Y-%m-%d'),
+            error=date_error
+        )
+
+    try:
+        # Create the project
+        project = project_service.create_project(form_data)
+        flash(f'Project "{project.project_name}" created successfully', 'success')
+        return redirect(url_for('projects.projects_page'))
+
+    except ValueError as e:
+        # Validation error - re-render form with error
+        prefill = {
+            'project_name': request.form.get('project_name', ''),
+            'project_group': request.form.get('project_group', ''),
+            'department': request.form.get('department', ''),
+            'assigned_attorney': request.form.get('assigned_attorney', ''),
+            'qcp_attorney': request.form.get('qcp_attorney', ''),
+            'date_to_client': request.form.get('date_to_client', ''),
+            'date_assigned_to_us': request.form.get('date_assigned_to_us', ''),
+            'internal_deadline': request.form.get('internal_deadline', ''),
+            'delivery_deadline': request.form.get('delivery_deadline', ''),
+            'notes': request.form.get('notes', ''),
+        }
+        departments = project_service.get_distinct_values('department')
+        attorneys = project_service.get_distinct_values('assigned_attorney')
+        qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
+
+        return render_template(
+            'project_form.html',
+            prefill=prefill,
+            is_clone=False,
+            departments=departments,
+            attorneys=attorneys,
+            qcp_attorneys=qcp_attorneys,
+            today=date.today().strftime('%Y-%m-%d'),
+            error=str(e)
+        )
+
+
+# ============================================================================
 # Project Detail & Edit HTML Routes
 # ============================================================================
 
@@ -521,11 +679,16 @@ def clone_project(id: int):
         flash('Project not found', 'danger')
         return redirect(url_for('projects.projects_page'))
 
-    # For now, redirect to projects page with a flash message
-    # The new project form will be implemented in Sprint 5.1
-    # When implemented, this will redirect to the new project form with pre-filled data
-    flash(f'Clone functionality will open New Project form pre-filled with data from "{project.project_name}". New Project form coming in Sprint 5.1.', 'info')
-    return redirect(url_for('projects.projects_page'))
+    # Redirect to new project form with pre-filled data
+    return redirect(url_for(
+        'projects.new_project_form',
+        clone_from=id,
+        project_name=f'Copy of {project.project_name}',
+        department=project.department,
+        assigned_attorney=project.assigned_attorney,
+        qcp_attorney=project.qcp_attorney,
+        project_group=project.project_group or ''
+    ))
 
 
 @projects_bp.route('/projects/<int:id>/delete', methods=['POST'])

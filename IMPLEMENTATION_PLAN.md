@@ -412,7 +412,7 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Build the new project creation form with validation.
 
 **Tasks:**
-- [ ] Create `app/templates/project_form.html`:
+- [x] Create `app/templates/project_form.html`:
   - All fields from SPEC (Project Name, Project Group, Department, etc.)
   - Required field indicators
   - Date pickers for date fields
@@ -421,10 +421,10 @@ This plan organizes development into seven phases, progressing from foundation t
   - Autocomplete on Department, Assigned Attorney, QCP Attorney
   - Submit button
   - Client-side validation for required fields
-- [ ] Create route `GET /projects/new` - renders form
-- [ ] Wire `POST /projects` to handle form submission (already exists from 2.2, may need to handle form data vs JSON)
-- [ ] On success: redirect to Projects page with flash message
-- [ ] On validation error: re-render form with error messages and preserved input
+- [x] Create route `GET /projects/new` - renders form
+- [x] Wire `POST /projects/create` to handle form submission (separate from JSON API endpoint)
+- [x] On success: redirect to Projects page with flash message
+- [x] On validation error: re-render form with error messages and preserved input
 
 **Acceptance Criteria:**
 - Form renders all fields correctly
@@ -435,7 +435,29 @@ This plan organizes development into seven phases, progressing from foundation t
 - Failed submission preserves entered data
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-12** - All tasks completed successfully. Created comprehensive new project form following the "Legal Precision" design system:
+>
+> **New Files Created:**
+> - `app/templates/project_form.html` - New project form with all fields from SPEC, required field indicators, date pickers, autocomplete inputs, client-side validation with visual feedback
+>
+> **New Routes Added to `app/routes/projects.py`:**
+> - `GET /projects/new` - Renders new project form, supports pre-fill via query params for clone functionality
+> - `POST /projects/create` - Handles form submission, creates project via service layer, re-renders with errors on validation failure
+>
+> **Updated Routes:**
+> - `GET /projects/<id>/clone` - Now redirects to `/projects/new` with query params (project_name, department, attorneys, project_group) pre-filled
+>
+> **Updated Templates:**
+> - `base.html` - Updated "New Project" nav link to point to actual route
+>
+> **Design Features:**
+> - Two-column layout matching edit form (Project Details & Team on left, Dates & Notes on right)
+> - Clone mode shows "Cloning" badge and pre-fills metadata
+> - Hidden status field defaults to "In Progress"
+> - Client-side validation highlights invalid fields with red border
+> - Server-side validation preserves all entered data on error
+>
+> Added 8 new route tests covering form rendering, project creation, validation errors, clone prefill, and optional dates. All 197 tests pass (14 model + 86 service + 97 route).
 
 ---
 

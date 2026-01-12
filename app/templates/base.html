@@ -34,7 +34,8 @@
                            href="{{ url_for('projects.projects_page') }}">Projects</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">New Project</a>
+                        <a class="nav-link {% if request.endpoint == 'projects.new_project_form' %}active{% endif %}"
+                           href="{{ url_for('projects.new_project_form') }}">New Project</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Reports</a>

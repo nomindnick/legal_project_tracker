@@ -1116,12 +1116,21 @@ class TestProjectDetailRoutes:
         assert response.status_code == 302
         assert '/projects/page' in response.location
 
-    def test_clone_project_redirects(self, client, create_project):
-        """Clone project redirects (to new form when implemented)."""
-        project_id = create_project(project_name='Clone Source')
+    def test_clone_project_redirects_to_new_form(self, client, create_project):
+        """Clone project redirects to new project form with pre-filled data."""
+        project_id = create_project(
+            project_name='Clone Source',
+            department='Test Dept',
+            assigned_attorney='Test Attorney',
+            qcp_attorney='Test QCP',
+            project_group='Test Group'
+        )
         response = client.get(f'/projects/{project_id}/clone')
-        # Currently redirects to projects page with info message
+        # Should redirect to new project form with params
         assert response.status_code == 302
+        assert '/projects/new' in response.location
+        assert 'clone_from=' in response.location
+        assert 'Copy+of+Clone+Source' in response.location or 'Copy%20of%20Clone%20Source' in response.location
 
     def test_clone_project_not_found_redirects(self, client):
         """Clone project redirects to projects page if not found."""
@@ -1159,3 +1168,148 @@ class TestProjectDetailRoutes:
 
         # Check that row has onclick with correct URL
         assert f'/projects/{project_id}/view' in html
+
+
+# ============================================================================
+# New Project Form Tests (Sprint 5.1)
+# ============================================================================
+
+class TestNewProjectForm:
+    """Tests for new project form routes."""
+
+    def test_new_project_form_renders(self, client):
+        """GET /projects/new renders the new project form."""
+        response = client.get('/projects/new')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert 'New Project' in html
+        assert 'Create Project' in html
+        assert 'project_name' in html
+
+    def test_new_project_form_has_default_date(self, client):
+        """New project form defaults date_assigned_to_us to today."""
+        response = client.get('/projects/new')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        # The today variable is passed to the template
+        today_str = date.today().strftime('%Y-%m-%d')
+        assert today_str in html
+
+    def test_new_project_form_clone_prefill(self, client, create_project):
+        """New project form shows prefilled data when cloning."""
+        project_id = create_project(
+            project_name='Original Project',
+            department='Test Dept',
+            assigned_attorney='Test Attorney',
+            qcp_attorney='Test QCP'
+        )
+        response = client.get(f'/projects/new?clone_from={project_id}&project_name=Copy&department=Test+Dept&assigned_attorney=Test+Attorney&qcp_attorney=Test+QCP')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert 'Cloning' in html or 'Clone' in html
+        assert 'Test Dept' in html
+        assert 'Test Attorney' in html
+        assert 'Test QCP' in html
+
+    def test_create_project_form_success(self, client, app):
+        """POST /projects/create creates a project and redirects."""
+        response = client.post('/projects/create', data={
+            'project_name': 'New Test Project',
+            'department': 'New Dept',
+            'assigned_attorney': 'New Attorney',
+            'qcp_attorney': 'New QCP',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress'
+        })
+
+        # Should redirect to projects page
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+        # Verify project was created
+        with app.app_context():
+            from app.services import project_service
+            projects = project_service.get_all_projects({'include_completed': True})
+            names = [p.project_name for p in projects]
+            assert 'New Test Project' in names
+
+    def test_create_project_form_with_notes(self, client, app):
+        """POST /projects/create creates a project with initial notes."""
+        response = client.post('/projects/create', data={
+            'project_name': 'Project With Notes',
+            'department': 'Test Dept',
+            'assigned_attorney': 'Test Attorney',
+            'qcp_attorney': 'Test QCP',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress',
+            'notes': 'Initial project notes'
+        })
+
+        assert response.status_code == 302
+
+        # Verify notes were saved
+        with app.app_context():
+            from app.services import project_service
+            projects = project_service.get_all_projects({'include_completed': True})
+            project = next((p for p in projects if p.project_name == 'Project With Notes'), None)
+            assert project is not None
+            assert 'Initial project notes' in project.notes
+
+    def test_create_project_form_missing_required_fields(self, client):
+        """POST /projects/create re-renders form on missing required fields."""
+        response = client.post('/projects/create', data={
+            'project_name': 'Incomplete Project',
+            # Missing department, attorneys, dates
+            'status': 'In Progress'
+        })
+
+        # Should re-render form with error (not redirect)
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert 'Missing required fields' in html or 'error' in html.lower()
+        # Form data should be preserved
+        assert 'Incomplete Project' in html
+
+    def test_create_project_form_invalid_date(self, client):
+        """POST /projects/create re-renders form on invalid date format."""
+        response = client.post('/projects/create', data={
+            'project_name': 'Bad Date Project',
+            'department': 'Test Dept',
+            'assigned_attorney': 'Test Attorney',
+            'qcp_attorney': 'Test QCP',
+            'date_to_client': 'not-a-date',  # Invalid date
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress'
+        })
+
+        # Should re-render form with error
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert 'Invalid date' in html or 'error' in html.lower()
+
+    def test_create_project_form_with_optional_dates(self, client, app):
+        """POST /projects/create handles optional deadline dates."""
+        response = client.post('/projects/create', data={
+            'project_name': 'Optional Dates Project',
+            'department': 'Test Dept',
+            'assigned_attorney': 'Test Attorney',
+            'qcp_attorney': 'Test QCP',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'internal_deadline': '2026-01-15',
+            'delivery_deadline': '2026-01-20',
+            'status': 'In Progress'
+        })
+
+        assert response.status_code == 302
+
+        # Verify dates were saved
+        with app.app_context():
+            from app.services import project_service
+            projects = project_service.get_all_projects({'include_completed': True})
+            project = next((p for p in projects if p.project_name == 'Optional Dates Project'), None)
+            assert project is not None
+            assert project.internal_deadline == date(2026, 1, 15)
+            assert project.delivery_deadline == date(2026, 1, 20)

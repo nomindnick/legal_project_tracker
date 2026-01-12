@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_clone %}Clone Project{% else %}New Project{% endif %} - Legal Project Tracker{% endblock %}
+
+{% block extra_css %}
+{# Google Fonts for Legal Precision theme #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="project-edit-page py-4">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="edit-top-bar">
+            <a href="{{ url_for('projects.projects_page') }}" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Projects
+            </a>
+        </div>
+
+        <!-- Header Card -->
+        <div class="edit-header-card">
+            <div class="edit-header-content">
+                <div class="edit-badge">
+                    {% if is_clone %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 1H6a2 2 0 0 0-2 2v1h8V3a2 2 0 0 0-2-2zM4 4V3a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v1h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1zM3 5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H3z"/>
+                    </svg>
+                    Cloning
+                    {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                    New Project
+                    {% endif %}
+                </div>
+                <h1 class="edit-title">{% if is_clone %}Create Copy of "{{ prefill.project_name|replace('Copy of ', '') }}"{% else %}Create New Project{% endif %}</h1>
+                <p class="edit-subtitle">{% if is_clone %}Pre-filled from source project{% else %}Enter project details below{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Error Message (shown when validation fails) -->
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <!-- New Project Form -->
+        <form action="{{ url_for('projects.create_project_form') }}" method="POST" class="edit-form" novalidate>
+            <div class="edit-grid">
+                <!-- Left Column: Project Details & Team -->
+                <div class="edit-column-left">
+                    <!-- Project Details Section -->
+                    <div class="edit-section-card">
+                        <div class="section-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                                <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                            </svg>
+                            Project Details
+                        </div>
+                        <div class="section-body">
+                            <div class="form-field">
+                                <label for="project_name" class="form-label required">Project Name</label>
+                                <input type="text" id="project_name" name="project_name" class="form-control"
+                                       value="{{ prefill.project_name or '' }}" required
+                                       placeholder="e.g., Employment Investigation - HR-2024-03">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="project_group" class="form-label">Project Group</label>
+                                <input type="text" id="project_group" name="project_group" class="form-control"
+                                       value="{{ prefill.project_group or '' }}"
+                                       placeholder="Optional: Link related projects"
+                                       data-autocomplete="/api/autocomplete/project_group"
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="project_group-dropdown"></div>
+                                <small class="form-hint">Use to group related deliverables together</small>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="department" class="form-label required">Department</label>
+                                <input type="text" id="department" name="department" class="form-control"
+                                       value="{{ prefill.department or '' }}" required
+                                       placeholder="e.g., Public Works, Human Resources"
+                                       data-autocomplete="/api/autocomplete/department"
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="department-dropdown"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Section -->
+                    <div class="edit-section-card">
+                        <div class="section-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                            </svg>
+                            Team Assignment
+                        </div>
+                        <div class="section-body">
+                            <div class="form-field">
+                                <label for="assigned_attorney" class="form-label required">Assigned Attorney</label>
+                                <input type="text" id="assigned_attorney" name="assigned_attorney" class="form-control"
+                                       value="{{ prefill.assigned_attorney or '' }}" required
+                                       placeholder="Primary attorney on this matter"
+                                       data-autocomplete="/api/autocomplete/assigned_attorney"
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="assigned_attorney-dropdown"></div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="qcp_attorney" class="form-label required">QCP Attorney</label>
+                                <input type="text" id="qcp_attorney" name="qcp_attorney" class="form-control"
+                                       value="{{ prefill.qcp_attorney or '' }}" required
+                                       placeholder="Quality control partner"
+                                       data-autocomplete="/api/autocomplete/qcp_attorney"
+                                       autocomplete="off">
+                                <div class="autocomplete-dropdown" id="qcp_attorney-dropdown"></div>
+                                <small class="form-hint">Quality Control Partner for review</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Dates & Notes -->
+                <div class="edit-column-right">
+                    <!-- Dates Section -->
+                    <div class="edit-section-card">
+                        <div class="section-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                            </svg>
+                            Important Dates
+                        </div>
+                        <div class="section-body">
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="date_to_client" class="form-label required">Date to Client</label>
+                                    <input type="date" id="date_to_client" name="date_to_client" class="form-control"
+                                           value="{{ prefill.date_to_client or '' }}" required>
+                                    <small class="form-hint">When client received original request</small>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="date_assigned_to_us" class="form-label required">Date Assigned to Us</label>
+                                    <input type="date" id="date_assigned_to_us" name="date_assigned_to_us" class="form-control"
+                                           value="{{ prefill.date_assigned_to_us or today }}" required>
+                                    <small class="form-hint">Defaults to today</small>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="internal_deadline" class="form-label">Internal Deadline</label>
+                                    <input type="date" id="internal_deadline" name="internal_deadline" class="form-control"
+                                           value="{{ prefill.internal_deadline or '' }}">
+                                    <small class="form-hint">When work should reach QCP</small>
+                                </div>
+
+                                <div class="form-field">
+                                    <label for="delivery_deadline" class="form-label">Delivery Deadline</label>
+                                    <input type="date" id="delivery_deadline" name="delivery_deadline" class="form-control"
+                                           value="{{ prefill.delivery_deadline or '' }}">
+                                    <small class="form-hint">Final delivery to client</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Initial Notes Section -->
+                    <div class="edit-section-card notes-section">
+                        <div class="section-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v6H9.5A1.5 1.5 0 0 0 8 10.5V14H2.5a.5.5 0 0 1-.5-.5v-11zm7 11.293V10.5a.5.5 0 0 1 .5-.5h3.293L9 13.793z"/>
+                            </svg>
+                            Initial Notes
+                        </div>
+                        <div class="section-body">
+                            <div class="form-field">
+                                <label for="notes" class="form-label">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: -1px; margin-right: 4px;">
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                    Add Initial Note
+                                </label>
+                                <textarea id="notes" name="notes" class="form-control" rows="4"
+                                          placeholder="Enter any initial notes about this project...">{{ prefill.notes or '' }}</textarea>
+                                <small class="form-hint">Optional: Will be timestamped automatically when saved</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden status field - defaults to "In Progress" -->
+            <input type="hidden" name="status" value="In Progress">
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <div class="actions-left">
+                    {# Empty for new project - no delete button #}
+                </div>
+                <div class="actions-right">
+                    <a href="{{ url_for('projects.projects_page') }}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                        </svg>
+                        {% if is_clone %}Create Copy{% else %}Create Project{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
+<script>
+    // Initialize autocomplete on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-autocomplete]').forEach(input => {
+            new Autocomplete(input, input.dataset.autocomplete);
+        });
+
+        // Client-side validation enhancement
+        const form = document.querySelector('.edit-form');
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let firstInvalid = null;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    if (!firstInvalid) firstInvalid = field;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (firstInvalid) {
+                e.preventDefault();
+                firstInvalid.focus();
+                // Show validation message
+                if (!document.querySelector('.validation-message')) {
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-warning validation-message mb-4';
+                    alert.innerHTML = '<strong>Please fill in all required fields</strong> (marked with *)';
+                    form.parentNode.insertBefore(alert, form);
+                }
+            }
+        });
+
+        // Clear invalid state on input
+        form.querySelectorAll('[required]').forEach(field => {
+            field.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    });
+</script>
+<style>
+    /* Validation styles */
+    .edit-form .form-control.is-invalid {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .edit-form .form-control.is-invalid:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    }
+
+    .validation-message {
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
