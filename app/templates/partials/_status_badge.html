@@ -1,11 +1,12 @@
 {# Status badge with color coding based on project status #}
+{# Uses custom CSS classes defined in custom.css #}
 {% set status_classes = {
-    'In Progress': 'bg-primary',
-    'Under Review': 'bg-info text-dark',
-    'Waiting on Client': 'bg-warning text-dark',
-    'On-Hold': 'bg-secondary',
-    'Completed': 'bg-success'
+    'In Progress': 'status-in-progress',
+    'Under Review': 'status-under-review',
+    'Waiting on Client': 'status-waiting-on-client',
+    'On-Hold': 'status-on-hold',
+    'Completed': 'status-completed'
 } %}
-<span class="badge {{ status_classes.get(project.status, 'bg-secondary') }}">
+<span class="status-badge {{ status_classes.get(project.status, 'status-in-progress') }}">
     {{ project.status }}
 </span>

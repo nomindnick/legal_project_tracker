@@ -1,16 +1,5 @@
 {# Project table rows partial for HTMX updates #}
-{# Uses custom status badge styling defined in projects.html #}
-
-{% macro status_badge(status) %}
-    {% set status_classes = {
-        'In Progress': 'status-in-progress',
-        'Under Review': 'status-under-review',
-        'Waiting on Client': 'status-waiting-on-client',
-        'On-Hold': 'status-on-hold',
-        'Completed': 'status-completed'
-    } %}
-    <span class="status-badge {{ status_classes.get(status, 'status-in-progress') }}">{{ status }}</span>
-{% endmacro %}
+{# Uses shared _status_badge.html partial for consistent styling #}
 
 {% for project in projects %}
 <tr class="project-row" data-project-id="{{ project.id }}" role="button" tabindex="0">
@@ -18,17 +7,18 @@
     <td class="col-project-name">{{ project.project_name }}</td>
     <td>{{ project.project_group or '' }}</td>
     <td>{{ project.department }}</td>
+    <td class="col-date">{{ project.date_to_client.strftime('%Y-%m-%d') if project.date_to_client else '' }}</td>
     <td class="col-date">{{ project.date_assigned_to_us.strftime('%Y-%m-%d') if project.date_assigned_to_us else '' }}</td>
     <td>{{ project.assigned_attorney }}</td>
     <td>{{ project.qcp_attorney }}</td>
     <td class="col-date">{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
     <td class="col-date">{{ project.delivery_deadline.strftime('%Y-%m-%d') if project.delivery_deadline else '' }}</td>
-    <td>{{ status_badge(project.status) }}</td>
+    <td>{% include 'partials/_status_badge.html' %}</td>
     <td class="col-notes" title="{{ project.notes or '' }}">{{ (project.notes[:50] + '...') if project.notes and project.notes|length > 50 else (project.notes or '') }}</td>
 </tr>
 {% else %}
 <tr>
-    <td colspan="11">
+    <td colspan="12">
         <div class="empty-state">
             <div class="empty-state-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">

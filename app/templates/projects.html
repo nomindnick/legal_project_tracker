@@ -332,42 +332,7 @@
         white-space: nowrap;
     }
 
-    /* Status Badges */
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.625rem;
-        border-radius: 3px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        white-space: nowrap;
-    }
-
-    .status-in-progress {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .status-under-review {
-        background: #fef3c7;
-        color: #b45309;
-    }
-
-    .status-waiting-on-client {
-        background: #fce7f3;
-        color: #be185d;
-    }
-
-    .status-on-hold {
-        background: #f1f5f9;
-        color: #64748b;
-    }
-
-    .status-completed {
-        background: #dcfce7;
-        color: #15803d;
-    }
+    /* Status badges defined in custom.css for consistency with dashboard */
 
     /* Empty State */
     .empty-state {
@@ -604,9 +569,18 @@
                                     {% else %}&#9650;{% endif %}
                                 </span>
                             </th>
+                            <th class="sortable {% if filters.get('sort_by') == 'date_to_client' %}sorted{% endif %}"
+                                onclick="setSort('date_to_client')">
+                                To Client
+                                <span class="sort-icon">
+                                    {% if filters.get('sort_by') == 'date_to_client' %}
+                                        {% if filters.get('sort_dir', 'asc') == 'desc' %}&#9660;{% else %}&#9650;{% endif %}
+                                    {% else %}&#9650;{% endif %}
+                                </span>
+                            </th>
                             <th class="sortable {% if filters.get('sort_by') == 'date_assigned_to_us' %}sorted{% endif %}"
                                 onclick="setSort('date_assigned_to_us')">
-                                Date Assigned
+                                Assigned
                                 <span class="sort-icon">
                                     {% if filters.get('sort_by') == 'date_assigned_to_us' %}
                                         {% if filters.get('sort_dir', 'asc') == 'desc' %}&#9660;{% else %}&#9650;{% endif %}

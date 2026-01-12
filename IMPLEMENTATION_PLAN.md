@@ -327,9 +327,14 @@ This plan organizes development into seven phases, progressing from foundation t
 - Table updates feel snappy (HTMX swap)
 
 **Sprint Update:**
-> **Completed 2026-01-12** - All tasks completed successfully. Completely redesigned projects.html with professional "Legal Precision" styling featuring Libre Baskerville serif headers and Source Sans 3 body text. Implemented comprehensive filter bar with Search, Status, Department, Assigned Attorney, and QCP Attorney dropdowns, plus Include Completed checkbox with Apply/Clear buttons. Added sortable column headers (all except Notes) with visual indicators and sort direction toggle via JavaScript + HTMX. Created custom status badges with semantic colors. Updated project_table_rows.html with clickable rows (visual feedback now, navigation deferred to Sprint 4.3). Added qcp_attorneys to route context. Updated custom.css with table styles and base.html navigation link. All 173 tests pass.
+> **Completed 2026-01-12** - All tasks completed successfully. Completely redesigned projects.html with professional "Legal Precision" styling featuring Libre Baskerville serif headers and Source Sans 3 body text. Implemented comprehensive filter bar with Search, Status, Department, Assigned Attorney, and QCP Attorney dropdowns, plus Include Completed checkbox with Apply/Clear buttons. Added sortable column headers (all except Notes) with visual indicators and sort direction toggle via JavaScript + HTMX. Updated project_table_rows.html with clickable rows (visual feedback now, navigation deferred to Sprint 4.3). Added qcp_attorneys to route context. Updated custom.css with table styles and base.html navigation link. All 173 tests pass.
 >
-> **Design notes:** Used "Legal Precision" aesthetic with deep slate (#1e293b) and warm brass (#b8860b) color scheme appropriate for law firm context. Avoided generic Bootstrap defaults per frontend-design guidance.
+> **Post-review updates:** Added missing "Date to Client" column per SPEC.md. Consolidated status badges to use shared `_status_badge.html` partial with custom CSS classes for consistency between dashboard and projects pages.
+>
+> **Design decisions:**
+> - Used single-select status dropdown (not multi-select) for simplicity; multi-select can be added as polish in Sprint 7.2 if needed
+> - Used "Legal Precision" aesthetic with deep slate (#1e293b) and warm brass (#b8860b) color scheme appropriate for law firm context
+> - Notes "expand option" (per SPEC.md) deferred to Sprint 7.2 UI Polish
 
 ---
 
@@ -550,6 +555,8 @@ This plan organizes development into seven phases, progressing from foundation t
 - [ ] Test at various screen widths (1024px, 768px minimum)
 - [ ] Fix any layout issues on smaller screens
 - [ ] Add favicon
+- [ ] (Optional) Add notes expand option on Projects table (SPEC.md: "notes truncated with expand option")
+- [ ] (Optional) Convert status filter to multi-select dropdown
 
 **Acceptance Criteria:**
 - All pages look consistent and professional
