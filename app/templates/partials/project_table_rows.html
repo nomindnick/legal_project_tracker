@@ -1,22 +1,34 @@
 {# Project table rows partial for HTMX updates #}
+{# Uses shared _status_badge.html partial for consistent styling #}
+
 {% for project in projects %}
-<tr data-project-id="{{ project.id }}">
-    <td>{{ project.id }}</td>
-    <td>{{ project.project_name }}</td>
+<tr class="project-row" data-project-id="{{ project.id }}">
+    <td class="col-id">{{ project.id }}</td>
+    <td class="col-project-name">{{ project.project_name }}</td>
     <td>{{ project.project_group or '' }}</td>
     <td>{{ project.department }}</td>
-    <td>{{ project.date_assigned_to_us.strftime('%Y-%m-%d') if project.date_assigned_to_us else '' }}</td>
+    <td class="col-date">{{ project.date_to_client.strftime('%Y-%m-%d') if project.date_to_client else '' }}</td>
+    <td class="col-date">{{ project.date_assigned_to_us.strftime('%Y-%m-%d') if project.date_assigned_to_us else '' }}</td>
     <td>{{ project.assigned_attorney }}</td>
     <td>{{ project.qcp_attorney }}</td>
-    <td>{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
-    <td>{{ project.delivery_deadline.strftime('%Y-%m-%d') if project.delivery_deadline else '' }}</td>
+    <td class="col-date">{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
+    <td class="col-date">{{ project.delivery_deadline.strftime('%Y-%m-%d') if project.delivery_deadline else '' }}</td>
     <td>{% include 'partials/_status_badge.html' %}</td>
-    <td>{{ (project.notes[:50] + '...') if project.notes and project.notes|length > 50 else (project.notes or '') }}</td>
+    <td class="col-notes" title="{{ project.notes or '' }}">{{ (project.notes[:50] + '...') if project.notes and project.notes|length > 50 else (project.notes or '') }}</td>
 </tr>
 {% else %}
 <tr>
-    <td colspan="11" class="text-center text-muted py-4">
-        No projects found matching your criteria.
+    <td colspan="12">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                    <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+            </div>
+            <p class="empty-state-text">No projects found</p>
+            <p class="empty-state-hint">Try adjusting your filters or create a new project</p>
+        </div>
     </td>
 </tr>
 {% endfor %}
