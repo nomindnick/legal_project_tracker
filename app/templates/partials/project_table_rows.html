@@ -1,7 +1,6 @@
 {# Project table rows partial for HTMX updates #}
 {% for project in projects %}
-<tr data-project-id="{{ project.id }}" style="cursor: pointer;"
-    onclick="window.location='/projects/{{ project.id }}'">
+<tr data-project-id="{{ project.id }}">
     <td>{{ project.id }}</td>
     <td>{{ project.project_name }}</td>
     <td>{{ project.project_group or '' }}</td>

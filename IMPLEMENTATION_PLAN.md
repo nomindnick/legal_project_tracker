@@ -284,6 +284,8 @@ This plan organizes development into seven phases, progressing from foundation t
 > **Completed 2026-01-12** - All tasks completed successfully. Added multi-term search to get_all_projects() service function using ilike for case-insensitive partial matching across project_name, department, notes, and project_group fields. Multiple search terms are ANDed together. Added search parameter handling to routes. Created two new HTML routes: GET /projects/page (full page with filter controls) and GET /projects/table_rows (HTMX partial for table updates). Created placeholder templates projects.html and partials/project_table_rows.html with basic filter form and table structure. Added 14 new service tests (TestSearchFunctionality) and 21 new route tests (8 search + 13 HTML routes). All 173 tests pass (14 model + 86 service + 73 route).
 >
 > **Note:** Test count breakdowns in Sprint 2.2 through 3.1 updates contained transposition errors between service and route counts. Totals were always correct; only the per-file breakdowns were swapped.
+>
+> **Post-review fix:** Removed onclick handler from project_table_rows.html that was navigating to `/projects/<id>` (a JSON endpoint). Clicking table rows would have displayed raw JSON instead of an HTML page. The `data-project-id` attribute is preserved for future use. Clickable rows will be implemented in Sprint 4.3 when the HTML detail page route is added.
 
 ---
 
