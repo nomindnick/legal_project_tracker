@@ -1,23 +1,38 @@
 {# Clickable project card for dashboard display #}
-<a href="{{ url_for('projects.view_project', id=project.id) }}" class="text-decoration-none">
-    <div class="card mb-2 project-card">
-        <div class="card-body py-2 px-3">
-            <div class="d-flex justify-content-between align-items-start">
-                <h6 class="card-title mb-1 text-dark">{{ project.project_name }}</h6>
-                {% include "partials/_status_badge.html" %}
-            </div>
-            <p class="card-text small text-muted mb-1">
-                <strong>Dept:</strong> {{ project.department }}
-            </p>
-            <p class="card-text small text-muted mb-1">
-                <strong>Assigned:</strong> {{ project.assigned_attorney }} |
-                <strong>QCP:</strong> {{ project.qcp_attorney }}
-            </p>
-            {% if project.delivery_deadline %}
-                <p class="card-text small text-muted mb-0">
-                    <strong>Due:</strong> {{ project.delivery_deadline }}
-                </p>
-            {% endif %}
-        </div>
+{# Determines if project is overdue for visual indicator #}
+{# project.delivery_deadline is a string (YYYY-MM-DD format), so convert today for comparison #}
+{% set today_str = today.strftime('%Y-%m-%d') if today else '' %}
+{% set is_overdue = project.delivery_deadline and project.delivery_deadline < today_str and project.status != 'Completed' %}
+
+<a href="{{ url_for('projects.view_project', id=project.id) }}"
+   class="dashboard-project-card {% if is_overdue %}card-overdue{% endif %}">
+    <div class="card-header-row">
+        <h6 class="project-name">{{ project.project_name }}</h6>
+        {% include "partials/_status_badge.html" %}
     </div>
+    <div class="project-meta">
+        <span class="meta-item">
+            <span class="meta-label">Dept:</span>
+            <span class="meta-value">{{ project.department }}</span>
+        </span>
+        <span class="meta-item">
+            <span class="meta-label">Attorney:</span>
+            <span class="meta-value">{{ project.assigned_attorney }}</span>
+        </span>
+        {% if project.qcp_attorney %}
+        <span class="meta-item">
+            <span class="meta-label">QCP:</span>
+            <span class="meta-value">{{ project.qcp_attorney }}</span>
+        </span>
+        {% endif %}
+    </div>
+    {% if project.delivery_deadline %}
+    <div class="deadline-row">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+        </svg>
+        <span>Due: {{ project.delivery_deadline }}</span>
+    </div>
+    {% endif %}
 </a>
