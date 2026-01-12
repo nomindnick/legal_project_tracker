@@ -2,7 +2,7 @@
 {# Uses shared _status_badge.html partial for consistent styling #}
 
 {% for project in projects %}
-<tr class="project-row" data-project-id="{{ project.id }}" role="button" tabindex="0">
+<tr class="project-row" data-project-id="{{ project.id }}">
     <td class="col-id">{{ project.id }}</td>
     <td class="col-project-name">{{ project.project_name }}</td>
     <td>{{ project.project_group or '' }}</td>

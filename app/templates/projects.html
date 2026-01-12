@@ -580,7 +580,7 @@
                             </th>
                             <th class="sortable {% if filters.get('sort_by') == 'date_assigned_to_us' %}sorted{% endif %}"
                                 onclick="setSort('date_assigned_to_us')">
-                                Assigned
+                                Date Assigned
                                 <span class="sort-icon">
                                     {% if filters.get('sort_by') == 'date_assigned_to_us' %}
                                         {% if filters.get('sort_dir', 'asc') == 'desc' %}&#9660;{% else %}&#9650;{% endif %}
@@ -589,7 +589,7 @@
                             </th>
                             <th class="sortable {% if filters.get('sort_by') == 'assigned_attorney' %}sorted{% endif %}"
                                 onclick="setSort('assigned_attorney')">
-                                Assigned
+                                Attorney
                                 <span class="sort-icon">
                                     {% if filters.get('sort_by') == 'assigned_attorney' %}
                                         {% if filters.get('sort_dir', 'asc') == 'desc' %}&#9660;{% else %}&#9650;{% endif %}
@@ -685,17 +685,6 @@
         // Trigger form submission
         htmx.trigger('#filter-form', 'submit');
     }
-
-    // Row click handler (placeholder - will navigate in Sprint 4.3)
-    document.addEventListener('click', function(e) {
-        const row = e.target.closest('.project-row');
-        if (row) {
-            const projectId = row.dataset.projectId;
-            // TODO: Navigate to detail page once it exists (Sprint 4.3)
-            console.log('Project clicked:', projectId);
-            // window.location.href = `/projects/${projectId}/detail`;
-        }
-    });
 
     // Update sort indicators after HTMX swap
     document.body.addEventListener('htmx:afterSwap', function(event) {

@@ -59,19 +59,9 @@ a.text-decoration-none .project-card {
     color: #15803d;
 }
 
-/* Clickable table rows */
+/* Table row styling (clickable rows deferred to Sprint 4.3) */
 .project-row {
-    cursor: pointer;
     transition: background-color 0.1s ease;
-}
-
-.project-row:hover {
-    background-color: #fefdfb !important;
-}
-
-.project-row:focus {
-    outline: 2px solid #b8860b;
-    outline-offset: -2px;
 }
 
 /* Column-specific styles */
