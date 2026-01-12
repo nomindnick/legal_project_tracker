@@ -7,7 +7,7 @@ Routes call these functions; they interact with models and database.
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app import db
 from app.models import Project, ProjectStatus
@@ -168,6 +168,8 @@ def get_all_projects(filters: dict = None) -> list[Project]:
             - delivery_deadline_to: Maximum delivery deadline (date)
             - date_assigned_from: Minimum date assigned (date)
             - date_assigned_to: Maximum date assigned (date)
+            - search: Multi-term search string (searches project_name,
+                     department, notes, project_group with ilike)
             - sort_by: Field name to sort by (default: delivery_deadline)
             - sort_dir: 'asc' or 'desc' (default: asc)
 
@@ -226,6 +228,21 @@ def get_all_projects(filters: dict = None) -> list[Project]:
         query = query.filter(
             Project.date_assigned_to_us <= filters['date_assigned_to']
         )
+
+    # Search filter - multi-term across multiple fields
+    # Each term must match at least one of: project_name, department, notes, project_group
+    # Multiple terms are ANDed together (all must match somewhere)
+    if filters.get('search'):
+        search_terms = filters['search'].strip().split()
+        for term in search_terms:
+            pattern = f'%{term}%'
+            term_filter = or_(
+                Project.project_name.ilike(pattern),
+                Project.department.ilike(pattern),
+                Project.notes.ilike(pattern),
+                Project.project_group.ilike(pattern)
+            )
+            query = query.filter(term_filter)
 
     # Sorting
     sort_by = filters.get('sort_by', 'delivery_deadline')

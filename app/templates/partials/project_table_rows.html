@@ -1,0 +1,23 @@
+{# Project table rows partial for HTMX updates #}
+{% for project in projects %}
+<tr data-project-id="{{ project.id }}" style="cursor: pointer;"
+    onclick="window.location='/projects/{{ project.id }}'">
+    <td>{{ project.id }}</td>
+    <td>{{ project.project_name }}</td>
+    <td>{{ project.project_group or '' }}</td>
+    <td>{{ project.department }}</td>
+    <td>{{ project.date_assigned_to_us.strftime('%Y-%m-%d') if project.date_assigned_to_us else '' }}</td>
+    <td>{{ project.assigned_attorney }}</td>
+    <td>{{ project.qcp_attorney }}</td>
+    <td>{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
+    <td>{{ project.delivery_deadline.strftime('%Y-%m-%d') if project.delivery_deadline else '' }}</td>
+    <td>{% include 'partials/_status_badge.html' %}</td>
+    <td>{{ (project.notes[:50] + '...') if project.notes and project.notes|length > 50 else (project.notes or '') }}</td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="11" class="text-center text-muted py-4">
+        No projects found matching your criteria.
+    </td>
+</tr>
+{% endfor %}

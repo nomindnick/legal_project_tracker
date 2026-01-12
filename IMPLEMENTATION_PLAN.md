@@ -255,7 +255,7 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Enhance routes to support table view with all filter/sort options.
 
 **Tasks:**
-- [ ] Enhance `GET /projects` route to accept query parameters:
+- [x] Enhance `GET /projects` route to accept query parameters:
   - `status` (can be comma-separated for multiple)
   - `department`
   - `assigned_attorney`
@@ -265,11 +265,11 @@ This plan organizes development into seven phases, progressing from foundation t
   - `sort_dir` (asc/desc)
   - `include_completed` (boolean, default false)
   - `include_deleted` (boolean, default false) — for potential admin view
-- [ ] Implement search using PostgreSQL `ilike` for case-insensitivity
-- [ ] Implement multi-term search: "Smith HR" should match projects where any field contains "Smith" AND any field contains "HR"
-- [ ] Add route `GET /projects/page` that renders HTML template (vs JSON)
-- [ ] Add route `GET /projects/table_rows` that returns just table body HTML (for HTMX updates)
-- [ ] Add tests for new query parameters
+- [x] Implement search using PostgreSQL `ilike` for case-insensitivity
+- [x] Implement multi-term search: "Smith HR" should match projects where any field contains "Smith" AND any field contains "HR"
+- [x] Add route `GET /projects/page` that renders HTML template (vs JSON)
+- [x] Add route `GET /projects/table_rows` that returns just table body HTML (for HTMX updates)
+- [x] Add tests for new query parameters
 
 **Acceptance Criteria:**
 - `GET /projects?include_completed=false` excludes completed
@@ -281,7 +281,9 @@ This plan organizes development into seven phases, progressing from foundation t
 - All tests pass
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-12** - All tasks completed successfully. Added multi-term search to get_all_projects() service function using ilike for case-insensitive partial matching across project_name, department, notes, and project_group fields. Multiple search terms are ANDed together. Added search parameter handling to routes. Created two new HTML routes: GET /projects/page (full page with filter controls) and GET /projects/table_rows (HTMX partial for table updates). Created placeholder templates projects.html and partials/project_table_rows.html with basic filter form and table structure. Added 14 new service tests (TestSearchFunctionality) and 21 new route tests (8 search + 13 HTML routes). All 173 tests pass (14 model + 86 service + 73 route).
+>
+> **Note:** Test count breakdowns in Sprint 2.2 through 3.1 updates contained transposition errors between service and route counts. Totals were always correct; only the per-file breakdowns were swapped.
 
 ---
 
