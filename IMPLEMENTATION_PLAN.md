@@ -581,11 +581,11 @@ This plan organizes development into seven phases, progressing from foundation t
 > - Comprehensive @media print section:
 >   - Hides navigation and action buttons
 >   - Forces color printing with -webkit-print-color-adjust
->   - Professional margins (0.6in x 0.5in)
+>   - Minimal margins (0.25in) to minimize browser chrome visibility
 >   - Prevents awkward page breaks within cards/tables
 >   - Optimized font sizes for print (11pt body, 9pt tables)
 >
-> All 225 tests pass. Templates use Google Fonts (Libre Baskerville, Source Sans 3) loaded via preconnect for performance.
+> All 225 tests pass. Google Fonts (Libre Baskerville, Source Sans 3) consolidated in base.html for site-wide consistency.
 
 ---
 
