@@ -1,11 +1,12 @@
 """Project routes for the Legal Project Tracker API.
 
-This module provides RESTful API endpoints for project CRUD operations.
+This module provides RESTful API endpoints for project CRUD operations,
+as well as HTML page routes for the web interface.
 Routes call the service layer; they handle HTTP concerns only.
 """
-from datetime import datetime
+from datetime import date, datetime
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
 from app.models import ProjectStatus
 from app.services import project_service
@@ -382,3 +383,167 @@ def projects_table_rows():
         'partials/project_table_rows.html',
         projects=projects
     )
+
+
+# ============================================================================
+# Project Detail & Edit HTML Routes
+# ============================================================================
+
+@projects_bp.route('/projects/<int:id>/view')
+def view_project(id: int):
+    """Render the project detail HTML page.
+
+    Args:
+        id: Project ID.
+
+    Returns:
+        HTML page with project details, or redirect to projects page if not found.
+    """
+    project = project_service.get_project(id)
+    if not project:
+        flash('Project not found', 'danger')
+        return redirect(url_for('projects.projects_page'))
+
+    return render_template(
+        'project_detail.html',
+        project=project,
+        today=date.today()
+    )
+
+
+@projects_bp.route('/projects/<int:id>/edit')
+def edit_project_form(id: int):
+    """Render the project edit form HTML page.
+
+    Args:
+        id: Project ID.
+
+    Returns:
+        HTML page with edit form, or redirect to projects page if not found.
+    """
+    project = project_service.get_project(id)
+    if not project:
+        flash('Project not found', 'danger')
+        return redirect(url_for('projects.projects_page'))
+
+    # Get autocomplete values for dropdowns
+    statuses = ProjectStatus.ALL
+    departments = project_service.get_distinct_values('department')
+    attorneys = project_service.get_distinct_values('assigned_attorney')
+    qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
+
+    return render_template(
+        'project_edit.html',
+        project=project,
+        statuses=statuses,
+        departments=departments,
+        attorneys=attorneys,
+        qcp_attorneys=qcp_attorneys
+    )
+
+
+@projects_bp.route('/projects/<int:id>/update', methods=['POST'])
+def update_project_form(id: int):
+    """Handle project edit form submission.
+
+    Processes form data, updates the project, and handles new notes.
+    Redirects back to detail page on success.
+
+    Args:
+        id: Project ID.
+
+    Returns:
+        Redirect to detail page on success, or re-render form with errors.
+    """
+    project = project_service.get_project(id)
+    if not project:
+        flash('Project not found', 'danger')
+        return redirect(url_for('projects.projects_page'))
+
+    # Parse form data
+    form_data = {
+        'project_name': request.form.get('project_name', '').strip(),
+        'project_group': request.form.get('project_group', '').strip() or None,
+        'department': request.form.get('department', '').strip(),
+        'assigned_attorney': request.form.get('assigned_attorney', '').strip(),
+        'qcp_attorney': request.form.get('qcp_attorney', '').strip(),
+        'status': request.form.get('status', '').strip(),
+    }
+
+    # Parse date fields
+    date_fields = ['date_to_client', 'date_assigned_to_us', 'internal_deadline', 'delivery_deadline']
+    for field in date_fields:
+        date_str = request.form.get(field, '').strip()
+        if date_str:
+            parsed = _parse_date(date_str)
+            if parsed:
+                form_data[field] = parsed
+            else:
+                flash(f'Invalid date format for {field.replace("_", " ")}', 'danger')
+                return redirect(url_for('projects.edit_project_form', id=id))
+        else:
+            form_data[field] = None
+
+    try:
+        # Update the project
+        updated_project = project_service.update_project(id, form_data)
+        if not updated_project:
+            flash('Project not found', 'danger')
+            return redirect(url_for('projects.projects_page'))
+
+        # Handle new note if provided
+        new_note = request.form.get('new_note', '').strip()
+        if new_note:
+            project_service.append_note(id, new_note)
+
+        flash('Project updated successfully', 'success')
+        return redirect(url_for('projects.view_project', id=id))
+
+    except ValueError as e:
+        flash(str(e), 'danger')
+        return redirect(url_for('projects.edit_project_form', id=id))
+
+
+@projects_bp.route('/projects/<int:id>/clone')
+def clone_project(id: int):
+    """Clone a project by redirecting to new project form with pre-filled data.
+
+    Pre-fills metadata (attorneys, department, project group) but leaves dates empty.
+
+    Args:
+        id: Project ID to clone from.
+
+    Returns:
+        Redirect to new project form with query params, or projects page if not found.
+    """
+    project = project_service.get_project(id)
+    if not project:
+        flash('Project not found', 'danger')
+        return redirect(url_for('projects.projects_page'))
+
+    # For now, redirect to projects page with a flash message
+    # The new project form will be implemented in Sprint 5.1
+    # When implemented, this will redirect to the new project form with pre-filled data
+    flash(f'Clone functionality will open New Project form pre-filled with data from "{project.project_name}". New Project form coming in Sprint 5.1.', 'info')
+    return redirect(url_for('projects.projects_page'))
+
+
+@projects_bp.route('/projects/<int:id>/delete', methods=['POST'])
+def delete_project_form(id: int):
+    """Handle project delete form submission.
+
+    Soft-deletes the project and redirects to the projects list.
+
+    Args:
+        id: Project ID.
+
+    Returns:
+        Redirect to projects page with success/error message.
+    """
+    success = project_service.delete_project(id)
+    if not success:
+        flash('Project not found', 'danger')
+    else:
+        flash('Project deleted successfully', 'success')
+
+    return redirect(url_for('projects.projects_page'))

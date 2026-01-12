@@ -1,8 +1,9 @@
 {# Project table rows partial for HTMX updates #}
 {# Uses shared _status_badge.html partial for consistent styling #}
+{# Rows are clickable and navigate to project detail page #}
 
 {% for project in projects %}
-<tr class="project-row" data-project-id="{{ project.id }}">
+<tr class="project-row" data-project-id="{{ project.id }}" onclick="window.location.href='{{ url_for('projects.view_project', id=project.id) }}'">
     <td class="col-id">{{ project.id }}</td>
     <td class="col-project-name">{{ project.project_name }}</td>
     <td>{{ project.project_group or '' }}</td>

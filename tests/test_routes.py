@@ -972,3 +972,190 @@ class TestProjectsHtmlRoutes:
 
         assert 'Active Project' in html
         assert 'Done Project' in html
+
+
+# ============================================================================
+# Project Detail & Edit HTML Routes
+# ============================================================================
+
+class TestProjectDetailRoutes:
+    """Tests for project detail, edit, and related HTML routes."""
+
+    def test_view_project_returns_200(self, client, create_project):
+        """View project page returns 200 for existing project."""
+        project_id = create_project(project_name='View Test Project')
+        response = client.get(f'/projects/{project_id}/view')
+        assert response.status_code == 200
+
+    def test_view_project_returns_html(self, client, create_project):
+        """View project page returns HTML content."""
+        project_id = create_project(project_name='View Test Project')
+        response = client.get(f'/projects/{project_id}/view')
+        assert response.content_type.startswith('text/html')
+
+    def test_view_project_displays_project_name(self, client, create_project):
+        """View project page displays the project name."""
+        project_id = create_project(project_name='Unique Project Name XYZ')
+        response = client.get(f'/projects/{project_id}/view')
+        html = response.data.decode('utf-8')
+        assert 'Unique Project Name XYZ' in html
+
+    def test_view_project_displays_all_fields(self, client, create_project):
+        """View project page displays all project fields."""
+        project_id = create_project(
+            project_name='Full Data Project',
+            department='Finance',
+            assigned_attorney='Alice Attorney',
+            qcp_attorney='Bob QCP',
+            status=ProjectStatus.UNDER_REVIEW
+        )
+        response = client.get(f'/projects/{project_id}/view')
+        html = response.data.decode('utf-8')
+
+        assert 'Full Data Project' in html
+        assert 'Finance' in html
+        assert 'Alice Attorney' in html
+        assert 'Bob QCP' in html
+        assert 'Under Review' in html
+
+    def test_view_project_not_found_redirects(self, client):
+        """View project redirects to projects page if not found."""
+        response = client.get('/projects/99999/view')
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+    def test_edit_project_form_returns_200(self, client, create_project):
+        """Edit project form returns 200 for existing project."""
+        project_id = create_project(project_name='Edit Test Project')
+        response = client.get(f'/projects/{project_id}/edit')
+        assert response.status_code == 200
+
+    def test_edit_project_form_displays_current_values(self, client, create_project):
+        """Edit project form displays current values in form fields."""
+        project_id = create_project(
+            project_name='Editable Project',
+            department='Human Resources'
+        )
+        response = client.get(f'/projects/{project_id}/edit')
+        html = response.data.decode('utf-8')
+
+        assert 'Editable Project' in html
+        assert 'Human Resources' in html
+        # Should have form elements
+        assert '<form' in html
+        assert 'method="POST"' in html
+
+    def test_edit_project_form_not_found_redirects(self, client):
+        """Edit project form redirects to projects page if not found."""
+        response = client.get('/projects/99999/edit')
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+    def test_update_project_form_updates_project(self, client, app, create_project):
+        """Update project form successfully updates the project."""
+        project_id = create_project(
+            project_name='Original Name',
+            department='Original Dept'
+        )
+
+        response = client.post(f'/projects/{project_id}/update', data={
+            'project_name': 'Updated Name',
+            'department': 'Updated Dept',
+            'assigned_attorney': 'John Smith',
+            'qcp_attorney': 'Jane Doe',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress'
+        })
+
+        # Should redirect to view page
+        assert response.status_code == 302
+        assert f'/projects/{project_id}/view' in response.location
+
+        # Verify update was applied
+        with app.app_context():
+            from app.services import project_service
+            updated = project_service.get_project(project_id)
+            assert updated.project_name == 'Updated Name'
+            assert updated.department == 'Updated Dept'
+
+    def test_update_project_form_appends_note(self, client, app, create_project):
+        """Update project form appends new note with timestamp."""
+        project_id = create_project(project_name='Note Test Project')
+
+        response = client.post(f'/projects/{project_id}/update', data={
+            'project_name': 'Note Test Project',
+            'department': 'Public Works',
+            'assigned_attorney': 'John Smith',
+            'qcp_attorney': 'Jane Doe',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress',
+            'new_note': 'This is a test note'
+        })
+
+        assert response.status_code == 302
+
+        with app.app_context():
+            from app.services import project_service
+            updated = project_service.get_project(project_id)
+            assert 'This is a test note' in updated.notes
+            assert ']: ' in updated.notes  # Timestamp format
+
+    def test_update_project_form_not_found_redirects(self, client):
+        """Update project form redirects to projects page if not found."""
+        response = client.post('/projects/99999/update', data={
+            'project_name': 'Test',
+            'department': 'Test',
+            'assigned_attorney': 'Test',
+            'qcp_attorney': 'Test',
+            'date_to_client': '2026-01-01',
+            'date_assigned_to_us': '2026-01-05',
+            'status': 'In Progress'
+        })
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+    def test_clone_project_redirects(self, client, create_project):
+        """Clone project redirects (to new form when implemented)."""
+        project_id = create_project(project_name='Clone Source')
+        response = client.get(f'/projects/{project_id}/clone')
+        # Currently redirects to projects page with info message
+        assert response.status_code == 302
+
+    def test_clone_project_not_found_redirects(self, client):
+        """Clone project redirects to projects page if not found."""
+        response = client.get('/projects/99999/clone')
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+    def test_delete_project_form_deletes(self, client, app, create_project):
+        """Delete project form soft-deletes the project."""
+        project_id = create_project(project_name='Delete Me')
+
+        response = client.post(f'/projects/{project_id}/delete')
+
+        # Should redirect to projects page
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+        # Verify soft delete was applied
+        with app.app_context():
+            from app.services import project_service
+            deleted = project_service.get_project(project_id)
+            assert deleted is None  # Should not be found after soft delete
+
+    def test_delete_project_form_not_found_redirects(self, client):
+        """Delete project form redirects to projects page if not found."""
+        response = client.post('/projects/99999/delete')
+        assert response.status_code == 302
+        assert '/projects/page' in response.location
+
+    def test_table_row_links_to_detail_page(self, client, create_project):
+        """Table rows link to the detail page."""
+        project_id = create_project(project_name='Link Test')
+        response = client.get('/projects/table_rows')
+        html = response.data.decode('utf-8')
+
+        # Check that row has onclick with correct URL
+        assert f'/projects/{project_id}/view' in html

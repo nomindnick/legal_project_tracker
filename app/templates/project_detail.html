@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.project_name }} - Legal Project Tracker{% endblock %}
+
+{% block extra_css %}
+{# Google Fonts for Legal Precision theme #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="project-detail-page py-4">
+    <div class="container">
+        <!-- Breadcrumb & Actions Bar -->
+        <div class="detail-top-bar">
+            <a href="{{ url_for('projects.projects_page') }}" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to Projects
+            </a>
+            <div class="action-buttons">
+                <a href="{{ url_for('projects.edit_project_form', id=project.id) }}" class="btn-action btn-edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                    </svg>
+                    Edit
+                </a>
+                <a href="{{ url_for('projects.clone_project', id=project.id) }}" class="btn-action btn-clone">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                    </svg>
+                    Clone
+                </a>
+            </div>
+        </div>
+
+        <!-- Project Header Card -->
+        <div class="detail-header-card">
+            <div class="header-content">
+                <div class="project-id-badge">
+                    <span class="id-label">Project</span>
+                    <span class="id-value">#{{ project.id }}</span>
+                </div>
+                <h1 class="project-title">{{ project.project_name }}</h1>
+                {% if project.project_group %}
+                <p class="project-group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/>
+                    </svg>
+                    {{ project.project_group }}
+                </p>
+                {% endif %}
+            </div>
+            <div class="header-status">
+                {% include 'partials/_status_badge.html' %}
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="detail-grid">
+            <!-- Left Column: Project Details & Team -->
+            <div class="detail-column-left">
+                <!-- Project Details Section -->
+                <div class="detail-section-card">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                            <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                        Project Details
+                    </div>
+                    <div class="section-body">
+                        <div class="detail-field">
+                            <span class="field-label">Department</span>
+                            <span class="field-value">{{ project.department }}</span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Date to Client</span>
+                            <span class="field-value field-date">
+                                {{ project.date_to_client.strftime('%B %d, %Y') if project.date_to_client else '—' }}
+                            </span>
+                        </div>
+                        <div class="detail-field">
+                            <span class="field-label">Date Assigned to Us</span>
+                            <span class="field-value field-date">
+                                {{ project.date_assigned_to_us.strftime('%B %d, %Y') if project.date_assigned_to_us else '—' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Section -->
+                <div class="detail-section-card">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                        </svg>
+                        Team
+                    </div>
+                    <div class="section-body">
+                        <div class="team-member">
+                            <div class="member-role">Assigned Attorney</div>
+                            <div class="member-name">{{ project.assigned_attorney }}</div>
+                        </div>
+                        <div class="team-member">
+                            <div class="member-role">QCP Attorney</div>
+                            <div class="member-name">{{ project.qcp_attorney }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Deadlines -->
+            <div class="detail-column-right">
+                <div class="detail-section-card deadlines-card">
+                    <div class="section-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                        </svg>
+                        Deadlines
+                    </div>
+                    <div class="section-body">
+                        <div class="deadline-item">
+                            <div class="deadline-type">Internal Deadline</div>
+                            {% if project.internal_deadline %}
+                            <div class="deadline-date">{{ project.internal_deadline.strftime('%B %d, %Y') }}</div>
+                            <div class="deadline-relative">{{ project.internal_deadline.strftime('%A') }}</div>
+                            {% else %}
+                            <div class="deadline-date deadline-empty">Not set</div>
+                            {% endif %}
+                        </div>
+                        <div class="deadline-divider"></div>
+                        <div class="deadline-item {% if project.delivery_deadline and project.delivery_deadline < today and project.status != 'Completed' %}deadline-overdue{% endif %}">
+                            <div class="deadline-type">Delivery Deadline</div>
+                            {% if project.delivery_deadline %}
+                            <div class="deadline-date">{{ project.delivery_deadline.strftime('%B %d, %Y') }}</div>
+                            <div class="deadline-relative">{{ project.delivery_deadline.strftime('%A') }}</div>
+                            {% if project.delivery_deadline < today and project.status != 'Completed' %}
+                            <div class="overdue-badge">OVERDUE</div>
+                            {% endif %}
+                            {% else %}
+                            <div class="deadline-date deadline-empty">Not set</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timestamps -->
+                <div class="timestamps-card">
+                    <div class="timestamp-item">
+                        <span class="timestamp-label">Created</span>
+                        <span class="timestamp-value">{{ project.created_at.strftime('%Y-%m-%d %H:%M') if project.created_at else '—' }}</span>
+                    </div>
+                    <div class="timestamp-item">
+                        <span class="timestamp-label">Last Updated</span>
+                        <span class="timestamp-value">{{ project.updated_at.strftime('%Y-%m-%d %H:%M') if project.updated_at else '—' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes History Section (Full Width) -->
+        <div class="notes-section">
+            <div class="detail-section-card">
+                <div class="section-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v6H9.5A1.5 1.5 0 0 0 8 10.5V14H2.5a.5.5 0 0 1-.5-.5v-11zm7 11.293V10.5a.5.5 0 0 1 .5-.5h3.293L9 13.793z"/>
+                    </svg>
+                    Notes History
+                </div>
+                <div class="section-body notes-body">
+                    {% if project.notes %}
+                    <div class="notes-timeline">
+                        {% set note_entries = project.notes.split('\n') %}
+                        {% for entry in note_entries if entry.strip() %}
+                        <div class="note-entry">
+                            {% if entry.startswith('[') and ']: ' in entry %}
+                                {% set timestamp = entry.split(']: ')[0][1:] %}
+                                {% set content = entry.split(']: ', 1)[1] if ']: ' in entry else entry %}
+                                <div class="note-timestamp">{{ timestamp }}</div>
+                                <div class="note-content">{{ content }}</div>
+                            {% else %}
+                                <div class="note-content note-legacy">{{ entry }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="notes-empty">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M2.5 1A1.5 1.5 0 0 0 1 2.5v11A1.5 1.5 0 0 0 2.5 15h6.086a1.5 1.5 0 0 0 1.06-.44l4.915-4.914A1.5 1.5 0 0 0 15 8.586V2.5A1.5 1.5 0 0 0 13.5 1h-11zM2 2.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 .5.5v6H9.5A1.5 1.5 0 0 0 8 10.5V14H2.5a.5.5 0 0 1-.5-.5v-11zm7 11.293V10.5a.5.5 0 0 1 .5-.5h3.293L9 13.793z"/>
+                        </svg>
+                        <p>No notes yet</p>
+                        <span>Click Edit to add the first note</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Action (at bottom, de-emphasized) -->
+        <div class="danger-zone">
+            <button type="button" class="btn-delete" onclick="confirmDelete({{ project.id }})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                </svg>
+                Delete Project
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Form (Hidden) -->
+<form id="delete-form" action="{{ url_for('projects.delete_project_form', id=project.id) }}" method="POST" style="display: none;">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmDelete(projectId) {
+        if (confirm('Are you sure you want to delete this project? This cannot be undone.')) {
+            document.getElementById('delete-form').submit();
+        }
+    }
+</script>
+{% endblock %}
