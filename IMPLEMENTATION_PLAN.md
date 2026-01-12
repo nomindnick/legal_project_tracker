@@ -550,7 +550,42 @@ This plan organizes development into seven phases, progressing from foundation t
 - Date headers are correct
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-12** - All tasks completed successfully. Completely redesigned all three report templates with professional "Legal Precision" styling:
+>
+> **Report Builder Page (`report_builder.html`):**
+> - Professional card-based layout with three report sections (Weekly Status, Monthly Stats, CSV Export)
+> - Custom checkbox grid for field selection with visual feedback
+> - Date selectors for monthly report period
+> - Stats preview showing what each report includes
+> - Themed action buttons with gradients and hover effects
+>
+> **Weekly Status Report (`weekly_status.html`):**
+> - Professional document layout with firm branding element
+> - Report header with title, type badge, generation date, and active project count
+> - Clean data table with alternating rows, status badges, and date formatting
+> - Footer with brass accent line and confidentiality notice
+> - Screen-only action bar with Back and Print buttons
+>
+> **Monthly Statistics Report (`monthly_stats.html`):**
+> - Executive summary style with three metric cards (Projects Opened, Completed, Avg Days)
+> - Visual indicators with color-coded left borders (blue for new, green for completed, brass for time)
+> - Breakdown tables for Department and Attorney with horizontal bar charts showing distribution
+> - Professional report header and footer matching weekly report
+>
+> **CSS Additions (~500 lines in custom.css):**
+> - Complete styling for reports page grid and cards
+> - Custom checkbox styling with :has() selector for modern browsers
+> - Status table styles for weekly report
+> - Metric cards with icons and indicators
+> - Breakdown tables with bar chart visualization
+> - Comprehensive @media print section:
+>   - Hides navigation and action buttons
+>   - Forces color printing with -webkit-print-color-adjust
+>   - Professional margins (0.6in x 0.5in)
+>   - Prevents awkward page breaks within cards/tables
+>   - Optimized font sizes for print (11pt body, 9pt tables)
+>
+> All 225 tests pass. Templates use Google Fonts (Libre Baskerville, Source Sans 3) loaded via preconnect for performance.
 
 ---
 

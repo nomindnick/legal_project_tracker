@@ -1,156 +1,242 @@
 {% extends 'base.html' %}
 
-{% block title %}Monthly Statistics - Legal Project Tracker{% endblock %}
+{% block title %}Monthly Statistics - {{ month_name }} {{ stats.year }} - Legal Project Tracker{% endblock %}
 
 {% block extra_css %}
-<style>
-    @media print {
-        .navbar, .btn-back, .no-print {
-            display: none !important;
-        }
-        .container {
-            max-width: 100% !important;
-        }
-        .card {
-            break-inside: avoid;
-        }
-    }
-    .report-header {
-        border-bottom: 2px solid #333;
-        padding-bottom: 1rem;
-        margin-bottom: 2rem;
-    }
-    .stat-card {
-        text-align: center;
-    }
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #0d6efd;
-    }
-    .stat-label {
-        font-size: 0.875rem;
-        color: #6c757d;
-        text-transform: uppercase;
-    }
-</style>
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="no-print mb-3">
-    <a href="{{ url_for('reports.reports_page') }}" class="btn btn-outline-secondary btn-back">
-        &larr; Back to Reports
-    </a>
-    <button onclick="window.print()" class="btn btn-outline-primary ms-2">
-        Print / Save as PDF
-    </button>
-</div>
+<div class="monthly-report-page">
 
-<div class="report-header">
-    <h1>Monthly Statistics</h1>
-    <p class="text-muted mb-0">
-        {{ month_name }} {{ stats.year }}
-    </p>
-    <p class="text-muted">
-        Generated: {{ generated_at.strftime('%B %d, %Y at %I:%M %p') }}
-    </p>
-</div>
+    <!-- Screen-only Action Bar -->
+    <div class="report-action-bar no-print">
+        <a href="{{ url_for('reports.reports_page') }}" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back to Reports
+        </a>
+        <button onclick="window.print()" class="btn-print">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"/>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print / Save as PDF
+        </button>
+    </div>
 
-<!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body">
-                <div class="stat-number">{{ stats.projects_opened }}</div>
-                <div class="stat-label">Projects Opened</div>
+    <!-- Report Document -->
+    <div class="report-document">
+
+        <!-- Report Header -->
+        <header class="report-header">
+            <div class="report-branding">
+                <div class="firm-mark"></div>
+                <div class="report-type-badge">Monthly Report</div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body">
-                <div class="stat-number">{{ stats.projects_completed }}</div>
-                <div class="stat-label">Projects Completed</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card stat-card h-100">
-            <div class="card-body">
-                <div class="stat-number">
-                    {% if stats.avg_days_to_completion is not none %}
-                        {{ stats.avg_days_to_completion }}
-                    {% else %}
-                        —
-                    {% endif %}
+
+            <h1 class="report-title">Monthly Statistics</h1>
+
+            <div class="report-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Reporting Period</span>
+                    <span class="meta-value meta-period">{{ month_name }} {{ stats.year }}</span>
                 </div>
-                <div class="stat-label">Avg. Days to Completion</div>
+                <div class="meta-divider"></div>
+                <div class="meta-item">
+                    <span class="meta-label">Generated</span>
+                    <span class="meta-value">{{ generated_at.strftime('%B %d, %Y') }}</span>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
+        </header>
 
-<div class="row">
-    <!-- By Department -->
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">Projects by Department</h5>
-            </div>
-            <div class="card-body">
-                {% if stats.by_department %}
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Department</th>
-                            <th class="text-end">Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dept, count in stats.by_department.items() | sort(attribute='1', reverse=true) %}
-                        <tr>
-                            <td>{{ dept }}</td>
-                            <td class="text-end">{{ count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="text-muted mb-0">No projects opened this month.</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+        <!-- Report Body -->
+        <main class="report-body">
 
-    <!-- By Attorney -->
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">Projects by Attorney</h5>
+            <!-- Key Metrics Section -->
+            <section class="metrics-section">
+                <h2 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                    Key Metrics
+                </h2>
+
+                <div class="metrics-grid">
+                    <!-- Projects Opened -->
+                    <div class="metric-card metric-opened">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <line x1="9" y1="15" x2="15" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">{{ stats.projects_opened }}</div>
+                            <div class="metric-label">Projects Opened</div>
+                        </div>
+                        <div class="metric-indicator indicator-new"></div>
+                    </div>
+
+                    <!-- Projects Completed -->
+                    <div class="metric-card metric-completed">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">{{ stats.projects_completed }}</div>
+                            <div class="metric-label">Projects Completed</div>
+                        </div>
+                        <div class="metric-indicator indicator-completed"></div>
+                    </div>
+
+                    <!-- Average Days to Completion -->
+                    <div class="metric-card metric-duration">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <div class="metric-value">
+                                {% if stats.avg_days_to_completion is not none %}
+                                    {{ stats.avg_days_to_completion }}
+                                    <span class="metric-unit">days</span>
+                                {% else %}
+                                    <span class="metric-na">N/A</span>
+                                {% endif %}
+                            </div>
+                            <div class="metric-label">Avg. Time to Completion</div>
+                        </div>
+                        <div class="metric-indicator indicator-time"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Breakdowns Section -->
+            <section class="breakdowns-section">
+                <div class="breakdown-grid">
+
+                    <!-- By Department -->
+                    <div class="breakdown-card">
+                        <h3 class="breakdown-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            Projects by Department
+                        </h3>
+
+                        {% if stats.by_department %}
+                        <div class="breakdown-table-wrapper">
+                            <table class="breakdown-table">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th class="col-count">Count</th>
+                                        <th class="col-bar">Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set max_dept_count = stats.by_department.values() | max %}
+                                    {% for dept, count in stats.by_department.items() | sort(attribute='1', reverse=true) %}
+                                    <tr>
+                                        <td class="dept-name">{{ dept }}</td>
+                                        <td class="dept-count">{{ count }}</td>
+                                        <td class="dept-bar">
+                                            <div class="bar-container">
+                                                <div class="bar bar-dept" style="width: {{ (count / max_dept_count * 100) | round }}%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="breakdown-empty">
+                            <p>No projects opened this month.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- By Attorney -->
+                    <div class="breakdown-card">
+                        <h3 class="breakdown-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Projects by Attorney
+                        </h3>
+
+                        {% if stats.by_attorney %}
+                        <div class="breakdown-table-wrapper">
+                            <table class="breakdown-table">
+                                <thead>
+                                    <tr>
+                                        <th>Attorney</th>
+                                        <th class="col-count">Count</th>
+                                        <th class="col-bar">Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set max_atty_count = stats.by_attorney.values() | max %}
+                                    {% for attorney, count in stats.by_attorney.items() | sort(attribute='1', reverse=true) %}
+                                    <tr>
+                                        <td class="atty-name">{{ attorney }}</td>
+                                        <td class="atty-count">{{ count }}</td>
+                                        <td class="atty-bar">
+                                            <div class="bar-container">
+                                                <div class="bar bar-atty" style="width: {{ (count / max_atty_count * 100) | round }}%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="breakdown-empty">
+                            <p>No projects opened this month.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Report Footer -->
+        <footer class="report-footer">
+            <div class="footer-line"></div>
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span class="footer-label">Legal Project Tracker</span>
+                    <span class="footer-separator">|</span>
+                    <span class="footer-text">Confidential</span>
+                </div>
+                <div class="footer-right">
+                    <span class="footer-text">Generated {{ generated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
             </div>
-            <div class="card-body">
-                {% if stats.by_attorney %}
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Attorney</th>
-                            <th class="text-end">Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for attorney, count in stats.by_attorney.items() | sort(attribute='1', reverse=true) %}
-                        <tr>
-                            <td>{{ attorney }}</td>
-                            <td class="text-end">{{ count }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p class="text-muted mb-0">No projects opened this month.</p>
-                {% endif %}
-            </div>
-        </div>
+        </footer>
+
     </div>
 </div>
 {% endblock %}
