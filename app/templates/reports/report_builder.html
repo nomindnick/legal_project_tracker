@@ -2,6 +2,10 @@
 
 {% block title %}Reports - Legal Project Tracker{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="reports-page">
     <div class="container-fluid px-4 py-4">

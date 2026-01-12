@@ -2,6 +2,10 @@
 
 {% block title %}Monthly Statistics - {{ month_name }} {{ stats.year }} - Legal Project Tracker{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="monthly-report-page">
 

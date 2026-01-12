@@ -2,6 +2,10 @@
 
 {% block title %}Weekly Status Report - Legal Project Tracker{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="weekly-report-page">
 
