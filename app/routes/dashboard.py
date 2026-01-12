@@ -2,6 +2,8 @@
 
 Provides the main dashboard view with projects organized by deadline urgency.
 """
+from datetime import date
+
 from flask import Blueprint, jsonify, render_template
 
 from app.services import project_service
@@ -57,7 +59,7 @@ def dashboard():
         Rendered HTML template with project data.
     """
     data = _get_dashboard_data()
-    return render_template('dashboard.html', **data)
+    return render_template('dashboard.html', **data, today=date.today())
 
 
 @dashboard_bp.route('/api/dashboard')
