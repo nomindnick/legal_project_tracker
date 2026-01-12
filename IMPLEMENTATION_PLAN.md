@@ -472,7 +472,7 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Backend logic for report data aggregation and CSV export.
 
 **Tasks:**
-- [ ] Create `app/services/report_service.py`:
+- [x] Create `app/services/report_service.py`:
   - `get_weekly_status_data(fields: list[str]) -> list[dict]`
     - Returns active projects with only requested fields
     - Renames delivery_deadline to "Anticipated Completion"
@@ -485,13 +485,13 @@ This plan organizes development into seven phases, progressing from foundation t
   - `export_projects_csv(filters: dict = None) -> str`
     - Returns CSV string of projects matching filters
     - All fields included (notes truncated to 200 chars)
-- [ ] Create `app/routes/reports.py` with:
+- [x] Create `app/routes/reports.py` with:
   - `GET /reports` - report builder page
   - `GET /reports/weekly` - generates weekly status HTML
   - `GET /reports/monthly` - generates monthly stats HTML
   - `GET /projects/export` - returns CSV file download
   - Query params for field selection and date range
-- [ ] Add tests for report service functions
+- [x] Add tests for report service functions
 
 **Acceptance Criteria:**
 - `get_monthly_stats` returns correct counts
@@ -502,7 +502,9 @@ This plan organizes development into seven phases, progressing from foundation t
 - Tests pass
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-12** - All tasks completed successfully. Created report_service.py with 4 functions: get_weekly_status_data (returns active projects with selected fields, renames delivery_deadline to anticipated_completion), get_monthly_stats (calculates projects opened/completed, breakdowns by department/attorney, avg days to completion), export_projects_csv (generates CSV string with filters, truncates notes to 200 chars), and get_available_weekly_fields (returns field options for UI). Created reports.py blueprint with 4 routes: GET /reports (report builder page), GET /reports/weekly (weekly status HTML), GET /reports/monthly (monthly stats HTML), GET /projects/export (CSV download with Content-Type: text/csv and Content-Disposition: attachment headers). Created placeholder templates in app/templates/reports/ with print-friendly styling. Added 28 new tests in test_report_services.py covering all service functions. Updated routes/__init__.py and services/__init__.py. All 225 tests pass (197 existing + 28 new report service tests).
+>
+> **Note:** Templates are functional but minimal - Sprint 6.2 will implement the polished UI with field checkboxes and month/year selectors per SPEC.md requirements.
 
 ---
 

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Legal Project Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Reports</h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Weekly Status Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Weekly Status Report</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Generate a report of active projects for client communication.</p>
+
+                <form action="{{ url_for('reports.weekly_report') }}" method="get">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select fields to include:</label>
+                        {% for field_key, field_name in available_fields.items() %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="fields"
+                                   value="{{ field_key }}" id="field_{{ field_key }}"
+                                   {% if field_key in ['project_name', 'department', 'status', 'anticipated_completion'] %}checked{% endif %}>
+                            <label class="form-check-label" for="field_{{ field_key }}">
+                                {{ field_name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Generate Weekly Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Statistics Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Monthly Statistics Report</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">View statistics for projects opened and completed by month.</p>
+
+                <form action="{{ url_for('reports.monthly_report') }}" method="get">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="month" class="form-label">Month</label>
+                            <select class="form-select" id="month" name="month">
+                                {% for m in range(1, 13) %}
+                                <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>
+                                    {{ ['January', 'February', 'March', 'April', 'May', 'June',
+                                        'July', 'August', 'September', 'October', 'November', 'December'][m-1] }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="year" class="form-label">Year</label>
+                            <select class="form-select" id="year" name="year">
+                                {% for y in range(current_year - 2, current_year + 2) %}
+                                <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Generate Monthly Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- CSV Export -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Export to CSV</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Export project data for use in Excel or other tools.</p>
+
+                <form action="{{ url_for('reports.export_csv') }}" method="get">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="include_completed"
+                                   value="true" id="export_include_completed">
+                            <label class="form-check-label" for="export_include_completed">
+                                Include completed projects
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-download"></i> Download CSV
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Collect checked fields as comma-separated value for form submission
+    document.querySelector('form[action*="weekly"]').addEventListener('submit', function(e) {
+        const checkboxes = this.querySelectorAll('input[name="fields"]:checked');
+        const values = Array.from(checkboxes).map(cb => cb.value);
+
+        // Remove all checkboxes from submission and add single hidden field
+        checkboxes.forEach(cb => cb.removeAttribute('name'));
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = 'fields';
+        hiddenField.value = values.join(',');
+        this.appendChild(hiddenField);
+    });
+</script>
+{% endblock %}

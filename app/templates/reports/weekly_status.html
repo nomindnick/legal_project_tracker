@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Weekly Status Report - Legal Project Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .navbar, .btn-back, .no-print {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+        }
+        .table {
+            font-size: 10pt;
+        }
+        .status-badge {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+    .report-header {
+        border-bottom: 2px solid #333;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+    .status-badge {
+        padding: 0.25em 0.5em;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+        font-weight: 500;
+    }
+    .status-in-progress { background-color: #0d6efd; color: white; }
+    .status-under-review { background-color: #6f42c1; color: white; }
+    .status-waiting-on-client { background-color: #fd7e14; color: white; }
+    .status-on-hold { background-color: #6c757d; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <a href="{{ url_for('reports.reports_page') }}" class="btn btn-outline-secondary btn-back">
+        &larr; Back to Reports
+    </a>
+    <button onclick="window.print()" class="btn btn-outline-primary ms-2">
+        Print / Save as PDF
+    </button>
+</div>
+
+<div class="report-header">
+    <h1>Weekly Status Report</h1>
+    <p class="text-muted mb-0">
+        Generated: {{ generated_at.strftime('%B %d, %Y at %I:%M %p') }}
+    </p>
+    <p class="text-muted">
+        Active Projects: {{ projects | length }}
+    </p>
+</div>
+
+{% if projects %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                {% for field in shown_fields %}
+                <th>{{ field_names.get(field, field) }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                {% for field in shown_fields %}
+                <td>
+                    {% if field == 'status' %}
+                        {% set status_class = project[field] | lower | replace(' ', '-') | replace('_', '-') %}
+                        <span class="status-badge status-{{ status_class }}">{{ project[field] }}</span>
+                    {% elif field == 'anticipated_completion' or field.endswith('deadline') or field.startswith('date') %}
+                        {{ project[field] if project[field] else '—' }}
+                    {% else %}
+                        {{ project[field] if project[field] else '—' }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No active projects to display.
+</div>
+{% endif %}
+{% endblock %}
