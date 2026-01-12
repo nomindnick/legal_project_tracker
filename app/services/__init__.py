@@ -17,8 +17,15 @@ from app.services.project_service import (
     get_longer_deadline,
     get_recently_completed,
 )
+from app.services.report_service import (
+    get_weekly_status_data,
+    get_monthly_stats,
+    export_projects_csv,
+    get_available_weekly_fields,
+)
 
 __all__ = [
+    # Project service
     'create_project',
     'get_project',
     'get_all_projects',
@@ -30,4 +37,9 @@ __all__ = [
     'get_due_this_week',
     'get_longer_deadline',
     'get_recently_completed',
+    # Report service
+    'get_weekly_status_data',
+    'get_monthly_stats',
+    'export_projects_csv',
+    'get_available_weekly_fields',
 ]

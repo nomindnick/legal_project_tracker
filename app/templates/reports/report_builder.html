@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - Legal Project Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Page Header -->
+        <div class="page-header-section">
+            <h1 class="page-header">Reports</h1>
+            <p class="page-subtitle">Generate client-ready reports and export project data</p>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="reports-grid">
+
+            <!-- Weekly Status Report -->
+            <div class="report-card report-card-primary">
+                <div class="report-card-header">
+                    <div class="report-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <div class="report-header-text">
+                        <h2 class="report-title">Weekly Status Report</h2>
+                        <p class="report-description">Active projects summary for client communication</p>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('reports.weekly_report') }}" method="get" class="report-form">
+                    <div class="field-selection">
+                        <label class="selection-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Select columns to include
+                        </label>
+
+                        <div class="checkbox-grid">
+                            {% for field_key, field_name in available_fields.items() %}
+                            <label class="field-checkbox {% if field_key in ['project_name', 'department', 'status', 'anticipated_completion'] %}default-checked{% endif %}">
+                                <input type="checkbox" name="fields" value="{{ field_key }}"
+                                       {% if field_key in ['project_name', 'department', 'status', 'anticipated_completion'] %}checked{% endif %}
+                                       {% if field_key == 'project_name' %}disabled{% endif %}>
+                                <span class="checkbox-indicator">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </span>
+                                <span class="checkbox-label">{{ field_name }}</span>
+                                {% if field_key == 'project_name' %}
+                                <span class="required-badge">Required</span>
+                                {% endif %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="report-actions">
+                        <button type="submit" class="btn-generate btn-generate-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            Generate Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Monthly Statistics -->
+            <div class="report-card report-card-stats">
+                <div class="report-card-header">
+                    <div class="report-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <div class="report-header-text">
+                        <h2 class="report-title">Monthly Statistics</h2>
+                        <p class="report-description">Project metrics and team performance summary</p>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('reports.monthly_report') }}" method="get" class="report-form">
+                    <div class="date-selection">
+                        <label class="selection-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Select reporting period
+                        </label>
+
+                        <div class="date-selectors">
+                            <div class="selector-group">
+                                <label for="month" class="selector-label">Month</label>
+                                <select class="form-select date-select" id="month" name="month">
+                                    {% for m in range(1, 13) %}
+                                    <option value="{{ m }}" {% if m == current_month %}selected{% endif %}>
+                                        {{ ['January', 'February', 'March', 'April', 'May', 'June',
+                                            'July', 'August', 'September', 'October', 'November', 'December'][m-1] }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="selector-group">
+                                <label for="year" class="selector-label">Year</label>
+                                <select class="form-select date-select" id="year" name="year">
+                                    {% for y in range(current_year - 2, current_year + 2) %}
+                                    <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-preview">
+                        <div class="preview-label">Report includes:</div>
+                        <ul class="preview-list">
+                            <li>Projects opened & completed</li>
+                            <li>Breakdown by department</li>
+                            <li>Breakdown by attorney</li>
+                            <li>Average time to completion</li>
+                        </ul>
+                    </div>
+
+                    <div class="report-actions">
+                        <button type="submit" class="btn-generate btn-generate-stats">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            Generate Statistics
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- CSV Export -->
+            <div class="report-card report-card-export">
+                <div class="report-card-header">
+                    <div class="report-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </div>
+                    <div class="report-header-text">
+                        <h2 class="report-title">Export to CSV</h2>
+                        <p class="report-description">Download project data for Excel or other tools</p>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('reports.export_csv') }}" method="get" class="report-form">
+                    <div class="export-options">
+                        <label class="selection-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                            Export options
+                        </label>
+
+                        <label class="export-checkbox">
+                            <input type="checkbox" name="include_completed" value="true">
+                            <span class="checkbox-indicator">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </span>
+                            <span class="checkbox-label">Include completed projects</span>
+                        </label>
+                    </div>
+
+                    <div class="export-info">
+                        <div class="info-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                        </div>
+                        <p>Export includes all project fields in CSV format compatible with Microsoft Excel, Google Sheets, and other spreadsheet applications.</p>
+                    </div>
+
+                    <div class="report-actions">
+                        <button type="submit" class="btn-generate btn-generate-export">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Download CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle form submission for weekly report - convert checkboxes to comma-separated value
+    document.querySelector('form[action*="weekly"]').addEventListener('submit', function(e) {
+        const checkboxes = this.querySelectorAll('input[name="fields"]:checked');
+        const values = Array.from(checkboxes).map(cb => cb.value);
+
+        // Always include project_name even though it's disabled
+        if (!values.includes('project_name')) {
+            values.unshift('project_name');
+        }
+
+        // Remove all checkboxes from submission and add single hidden field
+        this.querySelectorAll('input[name="fields"]').forEach(cb => cb.removeAttribute('name'));
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = 'fields';
+        hiddenField.value = values.join(',');
+        this.appendChild(hiddenField);
+    });
+</script>
+{% endblock %}

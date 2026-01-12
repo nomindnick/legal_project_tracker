@@ -16,6 +16,8 @@ def register_blueprints(app: Flask) -> None:
     """
     from app.routes.dashboard import dashboard_bp
     from app.routes.projects import projects_bp
+    from app.routes.reports import reports_bp
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(projects_bp)
+    app.register_blueprint(reports_bp)

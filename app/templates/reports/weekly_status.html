@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Weekly Status Report - Legal Project Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="weekly-report-page">
+
+    <!-- Screen-only Action Bar -->
+    <div class="report-action-bar no-print">
+        <a href="{{ url_for('reports.reports_page') }}" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back to Reports
+        </a>
+        <button onclick="window.print()" class="btn-print">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"/>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print / Save as PDF
+        </button>
+    </div>
+
+    <!-- Report Document -->
+    <div class="report-document">
+
+        <!-- Report Header -->
+        <header class="report-header">
+            <div class="report-branding">
+                <div class="firm-mark"></div>
+                <div class="report-type-badge">Status Report</div>
+            </div>
+
+            <h1 class="report-title">Weekly Project Status</h1>
+
+            <div class="report-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Report Generated</span>
+                    <span class="meta-value">{{ generated_at.strftime('%B %d, %Y') }}</span>
+                </div>
+                <div class="meta-divider"></div>
+                <div class="meta-item">
+                    <span class="meta-label">Active Projects</span>
+                    <span class="meta-value meta-count">{{ projects | length }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Report Body -->
+        <main class="report-body">
+            {% if projects %}
+            <div class="table-container">
+                <table class="status-table">
+                    <thead>
+                        <tr>
+                            {% for field in shown_fields %}
+                            <th class="col-{{ field | replace('_', '-') }}">{{ field_names.get(field, field) }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            {% for field in shown_fields %}
+                            <td class="col-{{ field | replace('_', '-') }}">
+                                {% if field == 'status' %}
+                                    {% set status_class = project[field] | lower | replace(' ', '-') | replace('_', '-') %}
+                                    <span class="status-badge status-{{ status_class }}">{{ project[field] }}</span>
+                                {% elif field == 'id' %}
+                                    <span class="id-value">{{ project[field] }}</span>
+                                {% elif field == 'anticipated_completion' or field.endswith('deadline') or field.startswith('date') %}
+                                    {% if project[field] %}
+                                        <span class="date-value">{{ project[field] }}</span>
+                                    {% else %}
+                                        <span class="empty-value">—</span>
+                                    {% endif %}
+                                {% elif field == 'project_name' %}
+                                    <span class="project-name-value">{{ project[field] }}</span>
+                                {% else %}
+                                    {{ project[field] if project[field] else '—' }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <p class="empty-text">No active projects to display.</p>
+                <p class="empty-hint">All projects may be completed or no projects match the current filters.</p>
+            </div>
+            {% endif %}
+        </main>
+
+        <!-- Report Footer -->
+        <footer class="report-footer">
+            <div class="footer-line"></div>
+            <div class="footer-content">
+                <div class="footer-left">
+                    <span class="footer-label">Legal Project Tracker</span>
+                    <span class="footer-separator">|</span>
+                    <span class="footer-text">Confidential</span>
+                </div>
+                <div class="footer-right">
+                    <span class="footer-text">Generated {{ generated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+</div>
+{% endblock %}
