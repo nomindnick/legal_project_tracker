@@ -216,21 +216,21 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Build the dashboard UI with four quadrants, visually scannable.
 
 **Tasks:**
-- [ ] Create `app/templates/base.html` with:
+- [x] Create `app/templates/base.html` with:
   - HTML5 doctype, meta viewport
   - Bootstrap 5 via CDN
   - HTMX via CDN
   - Navigation bar with links: Dashboard, Projects, New Project, Reports
   - Flash message display area (Bootstrap alerts)
   - Block for page content
-- [ ] Create `app/templates/dashboard.html`:
+- [x] Create `app/templates/dashboard.html`:
   - Four sections using Bootstrap cards: Overdue (red/danger accent), Due This Week (amber/warning), Longer Deadline (neutral/secondary), Recently Completed (green/success muted)
   - Each section shows count in header badge
   - Project cards showing: name, department, assigned attorney, QCP attorney, delivery deadline, status badge
   - Cards link to project detail
   - Empty state messaging for sections with no projects
-- [ ] Style for visual hierarchy: Overdue draws eye first, clear separation between sections
-- [ ] Responsive: Bootstrap grid works on tablet-width and up
+- [x] Style for visual hierarchy: Overdue draws eye first, clear separation between sections
+- [x] Responsive: Bootstrap grid works on tablet-width and up
 
 **Acceptance Criteria:**
 - Dashboard loads without errors
@@ -240,7 +240,7 @@ This plan organizes development into seven phases, progressing from foundation t
 - Layout is clean and scannable (human judgment)
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-11** - All tasks completed successfully. Created base.html with Bootstrap 5.3.3, HTMX 1.9.10 via CDN, dark navbar, and flash message support. Created dashboard.html with four sections (Overdue/danger, Due This Week/warning, Longer Deadline/secondary, Recently Completed/success muted) using Bootstrap cards and grid layout (col-12 col-lg-6). Created reusable partials: _project_card.html for clickable project cards and _status_badge.html for color-coded status badges. Added custom.css for card hover effects. Modified dashboard.py to render HTML templates (GET / and /dashboard) while preserving /api/dashboard JSON endpoint for testing. Updated route tests to handle HTML responses. All 138 tests pass.
 
 ---
 

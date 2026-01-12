@@ -1,0 +1,23 @@
+{# Clickable project card for dashboard display #}
+<a href="{{ url_for('projects.get_project', id=project.id) }}" class="text-decoration-none">
+    <div class="card mb-2 project-card">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <h6 class="card-title mb-1 text-dark">{{ project.project_name }}</h6>
+                {% include "partials/_status_badge.html" %}
+            </div>
+            <p class="card-text small text-muted mb-1">
+                <strong>Dept:</strong> {{ project.department }}
+            </p>
+            <p class="card-text small text-muted mb-1">
+                <strong>Assigned:</strong> {{ project.assigned_attorney }} |
+                <strong>QCP:</strong> {{ project.qcp_attorney }}
+            </p>
+            {% if project.delivery_deadline %}
+                <p class="card-text small text-muted mb-0">
+                    <strong>Due:</strong> {{ project.delivery_deadline }}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</a>

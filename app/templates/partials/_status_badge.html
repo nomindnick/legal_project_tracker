@@ -1,0 +1,11 @@
+{# Status badge with color coding based on project status #}
+{% set status_classes = {
+    'In Progress': 'bg-primary',
+    'Under Review': 'bg-info text-dark',
+    'Waiting on Client': 'bg-warning text-dark',
+    'On-Hold': 'bg-secondary',
+    'Completed': 'bg-success'
+} %}
+<span class="badge {{ status_classes.get(project.status, 'bg-secondary') }}">
+    {{ project.status }}
+</span>
