@@ -329,12 +329,13 @@ This plan organizes development into seven phases, progressing from foundation t
 **Sprint Update:**
 > **Completed 2026-01-12** - All tasks completed successfully. Completely redesigned projects.html with professional "Legal Precision" styling featuring Libre Baskerville serif headers and Source Sans 3 body text. Implemented comprehensive filter bar with Search, Status, Department, Assigned Attorney, and QCP Attorney dropdowns, plus Include Completed checkbox with Apply/Clear buttons. Added sortable column headers (all except Notes) with visual indicators and sort direction toggle via JavaScript + HTMX. Updated project_table_rows.html with clickable rows (visual feedback now, navigation deferred to Sprint 4.3). Added qcp_attorneys to route context. Updated custom.css with table styles and base.html navigation link. All 173 tests pass.
 >
-> **Post-review updates:** Added missing "Date to Client" column per SPEC.md. Consolidated status badges to use shared `_status_badge.html` partial with custom CSS classes for consistency between dashboard and projects pages.
+> **Post-review updates:** Added missing "Date to Client" column per SPEC.md. Consolidated status badges to use shared `_status_badge.html` partial with custom CSS classes for consistency between dashboard and projects pages. Extracted ~350 lines of inline CSS from projects.html into custom.css for maintainability; introduced CSS custom properties (design tokens) for colors, typography, and shadows to ensure consistency across pages and enable future theming.
 >
 > **Design decisions:**
 > - Used single-select status dropdown (not multi-select) for simplicity; multi-select can be added as polish in Sprint 7.2 if needed
 > - Used "Legal Precision" aesthetic with deep slate (#1e293b) and warm brass (#b8860b) color scheme appropriate for law firm context
 > - Notes "expand option" (per SPEC.md) deferred to Sprint 7.2 UI Polish
+> - CSS architecture: All styles consolidated in custom.css with CSS custom properties for design tokens; only Google Fonts links remain in template
 
 ---
 
