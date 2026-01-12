@@ -1259,3 +1259,211 @@ class TestDashboardFunctions:
 
             completed = get_recently_completed()
             assert len(completed) == 0
+
+
+class TestSearchFunctionality:
+    """Tests for multi-term search functionality in get_all_projects."""
+
+    def _create_test_project(self, **kwargs):
+        """Helper to create a test project with defaults."""
+        defaults = {
+            'project_name': 'Test Project',
+            'department': 'Public Works',
+            'date_to_client': date(2026, 1, 1),
+            'date_assigned_to_us': date(2026, 1, 5),
+            'assigned_attorney': 'John Smith',
+            'qcp_attorney': 'Jane Doe',
+        }
+        defaults.update(kwargs)
+        return create_project(defaults)
+
+    def test_search_by_project_name(self, app):
+        """Search finds projects matching project_name."""
+        with app.app_context():
+            self._create_test_project(project_name='Municipal Code Review')
+            self._create_test_project(project_name='Budget Analysis')
+
+            projects = get_all_projects({'search': 'Municipal'})
+            assert len(projects) == 1
+            assert projects[0].project_name == 'Municipal Code Review'
+
+    def test_search_by_department(self, app):
+        """Search finds projects matching department."""
+        with app.app_context():
+            self._create_test_project(department='Public Works')
+            self._create_test_project(department='Finance')
+
+            projects = get_all_projects({'search': 'Finance'})
+            assert len(projects) == 1
+            assert projects[0].department == 'Finance'
+
+    def test_search_by_notes(self, app):
+        """Search finds projects matching notes."""
+        with app.app_context():
+            self._create_test_project(notes='Meeting with client on Thursday')
+            self._create_test_project(notes='Reviewed documents')
+
+            projects = get_all_projects({'search': 'Thursday'})
+            assert len(projects) == 1
+            assert 'Thursday' in projects[0].notes
+
+    def test_search_by_project_group(self, app):
+        """Search finds projects matching project_group."""
+        with app.app_context():
+            self._create_test_project(project_group='Q4 Public Records')
+            self._create_test_project(project_group='Municipal Code Updates')
+
+            projects = get_all_projects({'search': 'Records'})
+            assert len(projects) == 1
+            assert projects[0].project_group == 'Q4 Public Records'
+
+    def test_search_case_insensitive(self, app):
+        """Search is case-insensitive (uses ilike)."""
+        with app.app_context():
+            self._create_test_project(project_name='Public Works Review')
+
+            # Test uppercase
+            projects = get_all_projects({'search': 'PUBLIC'})
+            assert len(projects) == 1
+
+            # Test lowercase
+            projects = get_all_projects({'search': 'public'})
+            assert len(projects) == 1
+
+            # Test mixed case
+            projects = get_all_projects({'search': 'PuBlIc'})
+            assert len(projects) == 1
+
+    def test_search_partial_match(self, app):
+        """Search finds partial matches (contains)."""
+        with app.app_context():
+            self._create_test_project(project_name='Municipal Code Review')
+
+            projects = get_all_projects({'search': 'Code'})
+            assert len(projects) == 1
+            assert projects[0].project_name == 'Municipal Code Review'
+
+    def test_search_multi_term_and_logic(self, app):
+        """Multi-term search uses AND logic (all terms must match somewhere)."""
+        with app.app_context():
+            # Note: search covers project_name, department, notes, project_group only
+            # This project has both "Smith" and "HR" (in searchable fields)
+            self._create_test_project(
+                project_name='HR Policy Review',
+                notes='Smith consulted on this'
+            )
+            # This project has only "Smith" (in notes)
+            self._create_test_project(
+                project_name='Budget Analysis',
+                notes='Smith involved'
+            )
+            # This project has only "HR" (in name)
+            self._create_test_project(
+                project_name='HR Compliance',
+            )
+
+            # Search for "smith hr" should only find the first one
+            # "hr" matches project_name, "smith" matches notes
+            projects = get_all_projects({'search': 'smith hr'})
+            assert len(projects) == 1
+            assert projects[0].project_name == 'HR Policy Review'
+
+    def test_search_multiple_terms_across_different_fields(self, app):
+        """Multi-term search can match terms across different fields."""
+        with app.app_context():
+            # Term1 in project_name, term2 in notes
+            self._create_test_project(
+                project_name='Contract Review',
+                notes='Client requested expedited processing'
+            )
+            self._create_test_project(
+                project_name='Budget Analysis',
+                notes='Standard timeline'
+            )
+
+            # "Contract" in name + "expedited" in notes
+            projects = get_all_projects({'search': 'Contract expedited'})
+            assert len(projects) == 1
+            assert projects[0].project_name == 'Contract Review'
+
+    def test_search_empty_string_returns_all(self, app):
+        """Empty search string returns all projects."""
+        with app.app_context():
+            self._create_test_project(project_name='Project 1')
+            self._create_test_project(project_name='Project 2')
+
+            # Empty search
+            projects = get_all_projects({'search': ''})
+            assert len(projects) == 2
+
+            # Whitespace only search
+            projects = get_all_projects({'search': '   '})
+            assert len(projects) == 2
+
+    def test_search_no_match_returns_empty(self, app):
+        """Search with no matches returns empty list."""
+        with app.app_context():
+            self._create_test_project(project_name='Municipal Code Review')
+
+            projects = get_all_projects({'search': 'nonexistent'})
+            assert len(projects) == 0
+
+    def test_search_combined_with_other_filters(self, app):
+        """Search can be combined with other filters."""
+        with app.app_context():
+            self._create_test_project(
+                project_name='Public Works Contract',
+                status=ProjectStatus.IN_PROGRESS
+            )
+            self._create_test_project(
+                project_name='Public Health Contract',
+                status=ProjectStatus.COMPLETED
+            )
+
+            # Search + status filter
+            projects = get_all_projects({
+                'search': 'Contract',
+                'status': ProjectStatus.IN_PROGRESS
+            })
+            assert len(projects) == 1
+            assert projects[0].project_name == 'Public Works Contract'
+
+    def test_search_combined_with_department_filter(self, app):
+        """Search combined with department filter."""
+        with app.app_context():
+            self._create_test_project(
+                project_name='Budget Review',
+                department='Finance'
+            )
+            self._create_test_project(
+                project_name='Budget Analysis',
+                department='Public Works'
+            )
+
+            projects = get_all_projects({
+                'search': 'Budget',
+                'department': 'Finance'
+            })
+            assert len(projects) == 1
+            assert projects[0].department == 'Finance'
+
+    def test_search_excludes_deleted_by_default(self, app):
+        """Search excludes soft-deleted projects by default."""
+        with app.app_context():
+            project = self._create_test_project(project_name='Deleted Project')
+            delete_project(project.id)
+
+            projects = get_all_projects({'search': 'Deleted'})
+            assert len(projects) == 0
+
+    def test_search_can_include_deleted(self, app):
+        """Search can include soft-deleted projects if requested."""
+        with app.app_context():
+            project = self._create_test_project(project_name='Deleted Project')
+            delete_project(project.id)
+
+            projects = get_all_projects({
+                'search': 'Deleted',
+                'include_deleted': True
+            })
+            assert len(projects) == 1
