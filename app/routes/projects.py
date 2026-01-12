@@ -352,6 +352,7 @@ def projects_page():
     statuses = [s for s in ProjectStatus.ALL]
     departments = project_service.get_distinct_values('department')
     attorneys = project_service.get_distinct_values('assigned_attorney')
+    qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
 
     return render_template(
         'projects.html',
@@ -359,6 +360,7 @@ def projects_page():
         statuses=statuses,
         departments=departments,
         attorneys=attorneys,
+        qcp_attorneys=qcp_attorneys,
         filters=request.args
     )
 

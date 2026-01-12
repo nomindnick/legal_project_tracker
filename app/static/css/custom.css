@@ -1,6 +1,8 @@
 /* Legal Project Tracker - Custom Styles */
 
-/* Hover effect for project cards */
+/* ============================================
+   Project Cards (Dashboard)
+   ============================================ */
 .project-card {
     transition: box-shadow 0.2s ease-in-out;
 }
@@ -12,4 +14,134 @@
 /* Ensure card links don't have underlines but cards are clearly clickable */
 a.text-decoration-none .project-card {
     cursor: pointer;
+}
+
+/* ============================================
+   Projects Table Styles (Used by HTMX partial)
+   These styles are duplicated here for when the
+   partial is loaded via HTMX (without page CSS)
+   ============================================ */
+
+/* Status Badges - Global definitions */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.status-in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-under-review {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-waiting-on-client {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.status-on-hold {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* Clickable table rows */
+.project-row {
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.project-row:hover {
+    background-color: #fefdfb !important;
+}
+
+.project-row:focus {
+    outline: 2px solid #b8860b;
+    outline-offset: -2px;
+}
+
+/* Column-specific styles */
+.col-id {
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.col-project-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.col-notes {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #6b7280;
+    font-size: 0.825rem;
+}
+
+.col-date {
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 0.8rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+}
+
+.empty-state-hint {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* ============================================
+   Global Utility Enhancements
+   ============================================ */
+
+/* Smooth scrolling for the whole page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+    outline: 2px solid #b8860b;
+    outline-offset: 2px;
+}
+
+/* Button transition enhancements */
+.btn {
+    transition: all 0.15s ease;
 }
