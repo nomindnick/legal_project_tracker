@@ -438,6 +438,42 @@ def new_project_form():
     )
 
 
+def _render_project_form_with_error(error_message: str):
+    """Helper to re-render the new project form with an error message.
+
+    Preserves all form data the user entered and fetches autocomplete values.
+
+    Args:
+        error_message: The error message to display.
+
+    Returns:
+        Rendered project_form.html template with error and preserved data.
+    """
+    prefill = {
+        'project_name': request.form.get('project_name', ''),
+        'project_group': request.form.get('project_group', ''),
+        'department': request.form.get('department', ''),
+        'assigned_attorney': request.form.get('assigned_attorney', ''),
+        'qcp_attorney': request.form.get('qcp_attorney', ''),
+        'date_to_client': request.form.get('date_to_client', ''),
+        'date_assigned_to_us': request.form.get('date_assigned_to_us', ''),
+        'internal_deadline': request.form.get('internal_deadline', ''),
+        'delivery_deadline': request.form.get('delivery_deadline', ''),
+        'notes': request.form.get('notes', ''),
+    }
+
+    return render_template(
+        'project_form.html',
+        prefill=prefill,
+        is_clone=False,
+        departments=project_service.get_distinct_values('department'),
+        attorneys=project_service.get_distinct_values('assigned_attorney'),
+        qcp_attorneys=project_service.get_distinct_values('qcp_attorney'),
+        today=date.today().strftime('%Y-%m-%d'),
+        error=error_message
+    )
+
+
 @projects_bp.route('/projects/create', methods=['POST'])
 def create_project_form():
     """Handle new project form submission.
@@ -480,32 +516,7 @@ def create_project_form():
 
     # If date parse error, re-render form
     if date_error:
-        prefill = {
-            'project_name': request.form.get('project_name', ''),
-            'project_group': request.form.get('project_group', ''),
-            'department': request.form.get('department', ''),
-            'assigned_attorney': request.form.get('assigned_attorney', ''),
-            'qcp_attorney': request.form.get('qcp_attorney', ''),
-            'date_to_client': request.form.get('date_to_client', ''),
-            'date_assigned_to_us': request.form.get('date_assigned_to_us', ''),
-            'internal_deadline': request.form.get('internal_deadline', ''),
-            'delivery_deadline': request.form.get('delivery_deadline', ''),
-            'notes': request.form.get('notes', ''),
-        }
-        departments = project_service.get_distinct_values('department')
-        attorneys = project_service.get_distinct_values('assigned_attorney')
-        qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
-
-        return render_template(
-            'project_form.html',
-            prefill=prefill,
-            is_clone=False,
-            departments=departments,
-            attorneys=attorneys,
-            qcp_attorneys=qcp_attorneys,
-            today=date.today().strftime('%Y-%m-%d'),
-            error=date_error
-        )
+        return _render_project_form_with_error(date_error)
 
     try:
         # Create the project
@@ -514,33 +525,7 @@ def create_project_form():
         return redirect(url_for('projects.projects_page'))
 
     except ValueError as e:
-        # Validation error - re-render form with error
-        prefill = {
-            'project_name': request.form.get('project_name', ''),
-            'project_group': request.form.get('project_group', ''),
-            'department': request.form.get('department', ''),
-            'assigned_attorney': request.form.get('assigned_attorney', ''),
-            'qcp_attorney': request.form.get('qcp_attorney', ''),
-            'date_to_client': request.form.get('date_to_client', ''),
-            'date_assigned_to_us': request.form.get('date_assigned_to_us', ''),
-            'internal_deadline': request.form.get('internal_deadline', ''),
-            'delivery_deadline': request.form.get('delivery_deadline', ''),
-            'notes': request.form.get('notes', ''),
-        }
-        departments = project_service.get_distinct_values('department')
-        attorneys = project_service.get_distinct_values('assigned_attorney')
-        qcp_attorneys = project_service.get_distinct_values('qcp_attorney')
-
-        return render_template(
-            'project_form.html',
-            prefill=prefill,
-            is_clone=False,
-            departments=departments,
-            attorneys=attorneys,
-            qcp_attorneys=qcp_attorneys,
-            today=date.today().strftime('%Y-%m-%d'),
-            error=str(e)
-        )
+        return _render_project_form_with_error(str(e))
 
 
 # ============================================================================
