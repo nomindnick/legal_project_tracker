@@ -56,15 +56,10 @@ def _build_filters_from_request() -> dict:
     """
     filters = {}
 
-    # Status filter - can be comma-separated OR multiple params (from multi-select)
+    # Status filter - pass raw values; service layer handles parsing
     status_list = request.args.getlist('status')
     if status_list:
-        # Handle both comma-separated strings and multiple params
-        all_statuses = []
-        for s in status_list:
-            all_statuses.extend([item.strip() for item in s.split(',') if item.strip()])
-        if all_statuses:
-            filters['status'] = all_statuses
+        filters['status'] = status_list
 
     # include_completed logic: if false (default), exclude Completed status
     # unless status filter is explicitly provided

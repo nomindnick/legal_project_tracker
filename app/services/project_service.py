@@ -152,6 +152,35 @@ def get_project(id: int) -> Optional[Project]:
     return None
 
 
+def _parse_status_filter(status_input) -> list[str]:
+    """Parse status filter input into a normalized list of status values.
+
+    Handles various input formats:
+    - Single status string: "In Progress"
+    - Comma-separated string: "In Progress, Completed"
+    - List of strings: ["In Progress", "Completed"]
+    - List with comma-separated strings: ["In Progress, Completed", "On-Hold"]
+
+    Args:
+        status_input: Status filter value(s) in any supported format.
+
+    Returns:
+        List of individual status strings, stripped of whitespace.
+    """
+    if not status_input:
+        return []
+
+    if isinstance(status_input, str):
+        # Single string, possibly comma-separated
+        return [s.strip() for s in status_input.split(',') if s.strip()]
+
+    # List of strings, each possibly comma-separated
+    all_statuses = []
+    for s in status_input:
+        all_statuses.extend([item.strip() for item in s.split(',') if item.strip()])
+    return all_statuses
+
+
 def get_all_projects(filters: dict = None) -> list[Project]:
     """Get all projects with optional filtering and sorting.
 
@@ -159,7 +188,7 @@ def get_all_projects(filters: dict = None) -> list[Project]:
 
     Args:
         filters: Optional dictionary with filter/sort parameters:
-            - status: Single status string or list of statuses
+            - status: Single status string, comma-separated string, or list
             - department: Department name (case-insensitive)
             - assigned_attorney: Attorney name (case-insensitive)
             - qcp_attorney: QCP attorney name (case-insensitive)
@@ -184,12 +213,11 @@ def get_all_projects(filters: dict = None) -> list[Project]:
     if not filters.get('include_deleted', False):
         query = query.filter(Project.deleted_at.is_(None))
 
-    # Status filter
+    # Status filter - parse and normalize the input
     if 'status' in filters and filters['status']:
-        status_values = filters['status']
-        if isinstance(status_values, str):
-            status_values = [status_values]
-        query = query.filter(Project.status.in_(status_values))
+        status_values = _parse_status_filter(filters['status'])
+        if status_values:
+            query = query.filter(Project.status.in_(status_values))
 
     # Department filter (case-insensitive)
     if 'department' in filters and filters['department']:
