@@ -60,6 +60,11 @@ A web-based project management system for law firms tracking legal work on large
    python scripts/seed_data.py
    ```
 
+   To reset the database and re-seed (clears all data):
+   ```bash
+   python scripts/reset_db.py
+   ```
+
 7. Run the development server:
    ```bash
    flask run
