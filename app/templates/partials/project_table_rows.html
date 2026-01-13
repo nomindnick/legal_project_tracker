@@ -2,7 +2,11 @@
 {# Uses shared _status_badge.html partial for consistent styling #}
 {# Rows are clickable and navigate to project detail page #}
 {# Sprint 7.2: Added notes expand feature and accessibility improvements #}
+{# For HTMX: wrapped in table>tbody for proper browser parsing #}
+{# For initial load: just tbody (included inside existing table) #}
 
+{% if is_htmx %}<table id="htmx-response-wrapper" style="display:none;">{% endif %}
+<tbody id="table-body">
 {% for project in projects %}
 <tr class="project-row"
     data-project-id="{{ project.id }}"
@@ -60,8 +64,11 @@
     </td>
 </tr>
 {% endfor %}
+</tbody>{% if is_htmx %}</table>{% endif %}
 
-{# Out-of-band swap to update results count #}
+{# Out-of-band swap to update results count (only for HTMX requests) #}
+{% if is_htmx %}
 <p class="results-info mb-0" id="results-info" hx-swap-oob="true">
     Showing <span class="results-count">{{ projects|length }}</span> project{% if projects|length != 1 %}s{% endif %}
 </p>
+{% endif %}

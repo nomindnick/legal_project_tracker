@@ -35,7 +35,7 @@
                 Filter Projects
             </div>
             <div class="card-body">
-                <form id="filter-form" hx-get="/projects/table_rows" hx-target="#table-body" hx-trigger="submit" hx-indicator="#loading-indicator">
+                <form id="filter-form" hx-get="/projects/table_rows" hx-target="#table-body" hx-swap="outerHTML" hx-select="#table-body" hx-indicator="#loading-indicator">
                     <!-- Hidden sort fields -->
                     <input type="hidden" name="sort_by" id="sort_by" value="{{ filters.get('sort_by', 'delivery_deadline') }}">
                     <input type="hidden" name="sort_dir" id="sort_dir" value="{{ filters.get('sort_dir', 'asc') }}">
@@ -269,9 +269,7 @@
                             <th>Notes</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body">
-                        {% include 'partials/project_table_rows.html' %}
-                    </tbody>
+                    {% include 'partials/project_table_rows.html' %}
                 </table>
             </div>
         </div>

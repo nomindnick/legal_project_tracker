@@ -379,7 +379,8 @@ def projects_table_rows():
 
     return render_template(
         'partials/project_table_rows.html',
-        projects=projects
+        projects=projects,
+        is_htmx=True  # Flag to include OOB swap for results count
     )
 
 
