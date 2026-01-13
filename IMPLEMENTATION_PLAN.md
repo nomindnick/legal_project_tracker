@@ -600,14 +600,14 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** End-to-end tests covering full user workflows.
 
 **Tasks:**
-- [ ] Create `tests/test_integration.py`:
+- [x] Create `tests/test_integration.py`:
   - Test: Create project via form → appears in projects list → edit status → appears in dashboard section
   - Test: Create multiple projects → filter works → sort works
   - Test: Complete project → disappears from default projects view → appears in Recently Completed
   - Test: Generate weekly report → all active projects appear
   - Test: Generate monthly report → stats are accurate
-- [ ] Fix any bugs discovered during integration testing
-- [ ] Ensure all tests pass: `pytest` with no failures
+- [x] Fix any bugs discovered during integration testing
+- [x] Ensure all tests pass: `pytest` with no failures
 
 **Acceptance Criteria:**
 - All integration tests pass
@@ -615,7 +615,30 @@ This plan organizes development into seven phases, progressing from foundation t
 - No console errors in browser during manual testing
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-12** - All tasks completed successfully. Created comprehensive integration test suite covering end-to-end user workflows:
+>
+> **File Created:** `tests/test_integration.py` (31 integration tests)
+>
+> **Test Classes and Coverage:**
+> - `TestProjectLifecycleDashboard` (4 tests): Create project via form → appears in list → edit status → moves between dashboard sections (overdue/due this week)
+> - `TestFilteringAndSorting` (5 tests): Multi-project filtering by department/status, sorting by deadline, multi-term search, combined filters
+> - `TestCompletionWorkflow` (4 tests): Completed projects excluded from default view, visible with include_completed flag, appears in Recently Completed dashboard
+> - `TestWeeklyReport` (3 tests): Active projects appear, field selection works, "Anticipated Completion" label used
+> - `TestMonthlyReport` (3 tests): Projects opened/completed counts accurate, by-department breakdown works
+> - `TestCloneWorkflow` (2 tests): Clone redirects with prefilled fields, dates not prefilled
+> - `TestNotesAppendOnly` (2 tests): Notes preserved when appending, timestamps added
+> - `TestSoftDelete` (3 tests): Delete hides from list, visible with flag, deleted_at timestamp set
+> - `TestAutocompleteNormalization` (2 tests): Distinct values returned, soft normalization works
+> - `TestCSVExport` (3 tests): Proper CSV format, respects filters, correct Content-Disposition header
+>
+> **Fixtures Added:**
+> - `create_test_project`: Factory for creating projects with controlled attributes
+> - `create_project_with_timestamps`: Factory for testing monthly stats with controlled created_at/updated_at
+>
+> **Bugs Found and Fixed:**
+> - Fixed timezone mismatch in `TestDashboardFunctions` (test_services.py): Tests used `date.today()` (local timezone) while service functions use `datetime.now(timezone.utc).date()` (UTC). Added `_utc_today()` helper method and updated all 20 date calculations to use UTC, matching the service layer.
+>
+> All 256 tests pass (225 existing + 31 new integration tests). 5 deprecation warnings in test_models.py about `datetime.utcnow()` - these are pre-existing and do not affect functionality.
 
 ---
 
