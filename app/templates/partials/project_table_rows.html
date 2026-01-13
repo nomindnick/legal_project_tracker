@@ -60,3 +60,8 @@
     </td>
 </tr>
 {% endfor %}
+
+{# Out-of-band swap to update results count #}
+<p class="results-info mb-0" id="results-info" hx-swap-oob="true">
+    Showing <span class="results-count">{{ projects|length }}</span> project{% if projects|length != 1 %}s{% endif %}
+</p>
