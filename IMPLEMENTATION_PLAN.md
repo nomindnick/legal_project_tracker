@@ -649,19 +649,19 @@ This plan organizes development into seven phases, progressing from foundation t
 **Objective:** Visual polish, consistent styling, responsive refinements.
 
 **Tasks:**
-- [ ] Review all pages for visual consistency:
+- [x] Review all pages for visual consistency:
   - Consistent spacing and margins
   - Consistent button styles
   - Consistent color usage for status badges across pages
   - Consistent typography
-- [ ] Add loading states where appropriate
-- [ ] Add empty states with helpful messaging (no projects yet, no results for filter)
-- [ ] Ensure all forms have proper labels and error states
-- [ ] Test at various screen widths (1024px, 768px minimum)
-- [ ] Fix any layout issues on smaller screens
-- [ ] Add favicon
-- [ ] (Optional) Add notes expand option on Projects table (SPEC.md: "notes truncated with expand option")
-- [ ] (Optional) Convert status filter to multi-select dropdown
+- [x] Add loading states where appropriate
+- [x] Add empty states with helpful messaging (no projects yet, no results for filter)
+- [x] Ensure all forms have proper labels and error states
+- [x] Test at various screen widths (1024px, 768px minimum)
+- [x] Fix any layout issues on smaller screens
+- [x] Add favicon
+- [x] (Optional) Add notes expand option on Projects table (SPEC.md: "notes truncated with expand option")
+- [x] (Optional) Convert status filter to multi-select dropdown
 
 **Acceptance Criteria:**
 - All pages look consistent and professional
@@ -670,7 +670,42 @@ This plan organizes development into seven phases, progressing from foundation t
 - Forms are accessible (labels linked to inputs)
 
 **Sprint Update:**
-> _[To be completed by Claude Code]_
+> **Completed 2026-01-13** - All tasks completed successfully including both optional features. Comprehensive UI polish applied across the application:
+>
+> **Files Created:**
+> - `app/static/favicon.svg` - Scales of justice favicon with brass/slate Legal Precision colors
+>
+> **CSS Updates (~800 lines added to custom.css):**
+> - **Button System:** Three standardized button classes (btn-primary-action, btn-secondary-action, btn-tertiary-action) with consistent sizing, typography, and hover states
+> - **Form Labels:** Unified styling for all form labels (0.8rem, 600 weight, uppercase, 0.04em letter-spacing)
+> - **Section Headers:** Standardized section-header-standard class with consistent styling
+> - **Empty States:** New empty-state-standard component with 40px icon, consistent padding and typography
+> - **Disabled States:** Styling for disabled buttons and form controls (opacity, cursor changes)
+> - **Validation Errors:** .is-invalid and .invalid-feedback classes with error icon, red styling, and animation
+> - **Loading States:** Enhanced HTMX loading indicators, btn-loading class with spinner overlay
+> - **Accessibility:** Keyboard-accessible table rows with tabindex, role, and onkeydown handlers; focus styles for sortable headers
+> - **Responsive Design:** Tablet breakpoint (768px-1024px) with 2-column filter layout, hidden less-critical table columns, adjusted grid breakpoints
+> - **Print Styles:** Non-report page print styles hiding navigation and interactive elements
+>
+> **Notes Expand Feature:**
+> - Added expandable notes in projects table with "Show more/less" toggle
+> - CSS transition for smooth expand/collapse animation
+> - Notes cell prevents row click propagation when interacting with toggle
+>
+> **Multi-Select Status Filter:**
+> - Custom dropdown component replacing single-select status filter
+> - Checkbox-based selection with status badge previews
+> - "Select all" and "Clear all" action buttons
+> - Display shows selected count or single status name
+> - Backend updated to handle multiple status parameters via getlist()
+>
+> **Template Updates:**
+> - `base.html` - Added favicon link
+> - `projects.html` - Multi-select status filter component, notes toggle JS
+> - `partials/project_table_rows.html` - Notes expand feature, keyboard accessibility, standardized empty state
+> - `app/routes/projects.py` - Updated status filter to handle multiple params
+>
+> All 256 tests pass. 5 pre-existing deprecation warnings about datetime.utcnow().
 
 ---
 

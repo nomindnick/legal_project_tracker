@@ -1,34 +1,61 @@
 {# Project table rows partial for HTMX updates #}
 {# Uses shared _status_badge.html partial for consistent styling #}
 {# Rows are clickable and navigate to project detail page #}
+{# Sprint 7.2: Added notes expand feature and accessibility improvements #}
 
 {% for project in projects %}
-<tr class="project-row" data-project-id="{{ project.id }}" onclick="window.location.href='{{ url_for('projects.view_project', id=project.id) }}'">
+<tr class="project-row"
+    data-project-id="{{ project.id }}"
+    tabindex="0"
+    role="link"
+    onclick="window.location.href='{{ url_for('projects.view_project', id=project.id) }}'"
+    onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='{{ url_for('projects.view_project', id=project.id) }}'; }">
     <td class="col-id">{{ project.id }}</td>
     <td class="col-project-name">{{ project.project_name }}</td>
-    <td>{{ project.project_group or '' }}</td>
+    <td class="col-project-group">{{ project.project_group or '' }}</td>
     <td>{{ project.department }}</td>
     <td class="col-date">{{ project.date_to_client.strftime('%Y-%m-%d') if project.date_to_client else '' }}</td>
     <td class="col-date">{{ project.date_assigned_to_us.strftime('%Y-%m-%d') if project.date_assigned_to_us else '' }}</td>
     <td>{{ project.assigned_attorney }}</td>
     <td>{{ project.qcp_attorney }}</td>
-    <td class="col-date">{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
+    <td class="col-date col-internal-deadline">{{ project.internal_deadline.strftime('%Y-%m-%d') if project.internal_deadline else '' }}</td>
     <td class="col-date">{{ project.delivery_deadline.strftime('%Y-%m-%d') if project.delivery_deadline else '' }}</td>
-    <td>{% include 'partials/_status_badge.html' %}</td>
-    <td class="col-notes" title="{{ project.notes or '' }}">{{ (project.notes[:50] + '...') if project.notes and project.notes|length > 50 else (project.notes or '') }}</td>
+    <td>
+        {% include 'partials/_status_badge.html' %}
+    </td>
+    <td class="notes-cell" onclick="event.stopPropagation();">
+        {% if project.notes %}
+            {% if project.notes|length > 50 %}
+            <div class="notes-content">
+                <span class="notes-truncated">{{ project.notes[:50] }}...</span>
+                <span class="notes-full">{{ project.notes }}</span>
+                <button type="button" class="notes-toggle" onclick="this.closest('.notes-cell').classList.toggle('expanded');">
+                    <span class="toggle-text">Show more</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </button>
+            </div>
+            {% else %}
+            <span class="notes-short">{{ project.notes }}</span>
+            {% endif %}
+        {% else %}
+        <span class="notes-empty"></span>
+        {% endif %}
+    </td>
 </tr>
 {% else %}
 <tr>
     <td colspan="12">
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+        <div class="empty-state-standard">
+            <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
                     <path d="M8 6.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V11a.5.5 0 0 1-1 0V9.5H6a.5.5 0 0 1 0-1h1.5V7a.5.5 0 0 1 .5-.5z"/>
                 </svg>
             </div>
-            <p class="empty-state-text">No projects found</p>
-            <p class="empty-state-hint">Try adjusting your filters or create a new project</p>
+            <p class="empty-title">No projects found</p>
+            <p class="empty-hint">Try adjusting your filters or create a new project</p>
         </div>
     </td>
 </tr>

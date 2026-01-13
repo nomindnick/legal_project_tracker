@@ -56,12 +56,15 @@ def _build_filters_from_request() -> dict:
     """
     filters = {}
 
-    # Status filter - can be comma-separated
-    status = request.args.get('status')
-    if status:
-        status_list = [s.strip() for s in status.split(',') if s.strip()]
-        if status_list:
-            filters['status'] = status_list
+    # Status filter - can be comma-separated OR multiple params (from multi-select)
+    status_list = request.args.getlist('status')
+    if status_list:
+        # Handle both comma-separated strings and multiple params
+        all_statuses = []
+        for s in status_list:
+            all_statuses.extend([item.strip() for item in s.split(',') if item.strip()])
+        if all_statuses:
+            filters['status'] = all_statuses
 
     # include_completed logic: if false (default), exclude Completed status
     # unless status filter is explicitly provided

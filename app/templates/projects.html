@@ -49,17 +49,38 @@
                                    value="{{ filters.get('search', '') }}">
                         </div>
 
-                        <!-- Status -->
+                        <!-- Status (Multi-Select) -->
                         <div class="col-md-2">
-                            <label class="filter-label">Status</label>
-                            <select class="form-select" name="status">
-                                <option value="">All Statuses</option>
-                                {% for status in statuses %}
-                                <option value="{{ status }}" {% if filters.get('status') == status %}selected{% endif %}>
-                                    {{ status }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <label class="filter-label" id="status-label">Status</label>
+                            <div class="multi-select-dropdown" id="status-multi-select" aria-labelledby="status-label">
+                                <button type="button" class="multi-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="multi-select-text">All Statuses</span>
+                                    <span class="multi-select-count" style="display: none;">0</span>
+                                    <svg class="multi-select-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                    </svg>
+                                </button>
+                                <div class="multi-select-menu" role="listbox" aria-multiselectable="true">
+                                    {% set selected_statuses = filters.get('status', '').split(',') if filters.get('status') else [] %}
+                                    {% for status in statuses %}
+                                    <div class="multi-select-option">
+                                        <input type="checkbox"
+                                               id="status-{{ loop.index }}"
+                                               name="status"
+                                               value="{{ status }}"
+                                               {% if status in selected_statuses %}checked{% endif %}>
+                                        <label for="status-{{ loop.index }}">{{ status }}</label>
+                                        <span class="status-preview">
+                                            <span class="status-badge status-{{ status|lower|replace(' ', '-') }}">{{ status[:3] }}</span>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                    <div class="multi-select-actions">
+                                        <button type="button" class="multi-select-clear">Clear all</button>
+                                        <button type="button" class="multi-select-all">Select all</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Department -->
@@ -260,6 +281,87 @@
 
 {% block extra_js %}
 <script>
+    // Multi-select status filter functionality
+    (function() {
+        const dropdown = document.getElementById('status-multi-select');
+        if (!dropdown) return;
+
+        const trigger = dropdown.querySelector('.multi-select-trigger');
+        const menu = dropdown.querySelector('.multi-select-menu');
+        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+        const textSpan = dropdown.querySelector('.multi-select-text');
+        const countSpan = dropdown.querySelector('.multi-select-count');
+        const clearBtn = dropdown.querySelector('.multi-select-clear');
+        const allBtn = dropdown.querySelector('.multi-select-all');
+
+        // Toggle dropdown
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isOpen = dropdown.classList.contains('open');
+            dropdown.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', !isOpen);
+        });
+
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Update display text
+        function updateDisplay() {
+            const checked = Array.from(checkboxes).filter(cb => cb.checked);
+            if (checked.length === 0) {
+                textSpan.textContent = 'All Statuses';
+                countSpan.style.display = 'none';
+            } else if (checked.length === 1) {
+                textSpan.textContent = checked[0].nextElementSibling.textContent;
+                countSpan.style.display = 'none';
+            } else {
+                textSpan.textContent = 'Status';
+                countSpan.textContent = checked.length;
+                countSpan.style.display = 'inline-flex';
+            }
+        }
+
+        // Checkbox change handler
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateDisplay);
+        });
+
+        // Clear all button
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            checkboxes.forEach(cb => cb.checked = false);
+            updateDisplay();
+        });
+
+        // Select all button
+        allBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            checkboxes.forEach(cb => cb.checked = true);
+            updateDisplay();
+        });
+
+        // Initialize display on page load
+        updateDisplay();
+    })();
+
+    // Notes expand toggle text update
+    document.body.addEventListener('click', function(e) {
+        if (e.target.closest('.notes-toggle')) {
+            const cell = e.target.closest('.notes-cell');
+            const toggleText = cell.querySelector('.toggle-text');
+            if (toggleText) {
+                toggleText.textContent = cell.classList.contains('expanded') ? 'Show less' : 'Show more';
+            }
+        }
+    });
+
     // Sort functionality
     function setSort(field) {
         const currentSort = document.getElementById('sort_by').value;
@@ -282,8 +384,15 @@
         // Clear text inputs
         document.querySelector('[name="search"]').value = '';
 
+        // Reset multi-select status checkboxes
+        document.querySelectorAll('#status-multi-select input[type="checkbox"]').forEach(cb => cb.checked = false);
+        // Trigger display update
+        const textSpan = document.querySelector('#status-multi-select .multi-select-text');
+        const countSpan = document.querySelector('#status-multi-select .multi-select-count');
+        if (textSpan) textSpan.textContent = 'All Statuses';
+        if (countSpan) countSpan.style.display = 'none';
+
         // Reset dropdowns
-        document.querySelector('[name="status"]').value = '';
         document.querySelector('[name="department"]').value = '';
         document.querySelector('[name="assigned_attorney"]').value = '';
         document.querySelector('[name="qcp_attorney"]').value = '';
