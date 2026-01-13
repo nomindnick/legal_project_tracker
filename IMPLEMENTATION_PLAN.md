@@ -635,7 +635,8 @@ This plan organizes development into seven phases, progressing from foundation t
 > - `create_test_project`: Factory for creating projects with controlled attributes
 > - `create_project_with_timestamps`: Factory for testing monthly stats with controlled created_at/updated_at
 >
-> **Bugs Found and Fixed:** None - API response format initially misunderstood in tests (data wrapped in `{'data': ...}`), corrected in test assertions.
+> **Bugs Found and Fixed:**
+> - Fixed timezone mismatch in `TestDashboardFunctions` (test_services.py): Tests used `date.today()` (local timezone) while service functions use `datetime.now(timezone.utc).date()` (UTC). Added `_utc_today()` helper method and updated all 20 date calculations to use UTC, matching the service layer.
 >
 > All 256 tests pass (225 existing + 31 new integration tests). 5 deprecation warnings in test_models.py about `datetime.utcnow()` - these are pre-existing and do not affect functionality.
 

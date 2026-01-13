@@ -4,7 +4,7 @@ Comprehensive tests covering CRUD operations, soft delete,
 soft normalization, filtering, sorting, and append-only notes.
 """
 import pytest
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from app import db
 from app.models import Project, ProjectStatus
@@ -1025,6 +1025,10 @@ class TestEdgeCases:
 class TestDashboardFunctions:
     """Tests for dashboard service functions."""
 
+    def _utc_today(self):
+        """Get today's date in UTC to match service layer timezone handling."""
+        return datetime.now(timezone.utc).date()
+
     def _create_project_with_deadline(self, deadline, status=ProjectStatus.IN_PROGRESS):
         """Helper to create a project with specific deadline and status."""
         return create_project({
@@ -1041,7 +1045,7 @@ class TestDashboardFunctions:
     def test_get_overdue_projects_finds_past_deadline(self, app):
         """Projects with delivery_deadline in the past are overdue."""
         with app.app_context():
-            yesterday = date.today() - timedelta(days=1)
+            yesterday = self._utc_today() - timedelta(days=1)
             self._create_project_with_deadline(yesterday)
 
             overdue = get_overdue_projects()
@@ -1051,7 +1055,7 @@ class TestDashboardFunctions:
     def test_get_overdue_projects_excludes_future_deadline(self, app):
         """Projects with future deadline are not overdue."""
         with app.app_context():
-            tomorrow = date.today() + timedelta(days=1)
+            tomorrow = self._utc_today() + timedelta(days=1)
             self._create_project_with_deadline(tomorrow)
 
             overdue = get_overdue_projects()
@@ -1060,7 +1064,7 @@ class TestDashboardFunctions:
     def test_get_overdue_projects_excludes_completed(self, app):
         """Completed projects are not shown as overdue."""
         with app.app_context():
-            yesterday = date.today() - timedelta(days=1)
+            yesterday = self._utc_today() - timedelta(days=1)
             self._create_project_with_deadline(yesterday, ProjectStatus.COMPLETED)
 
             overdue = get_overdue_projects()
@@ -1069,7 +1073,7 @@ class TestDashboardFunctions:
     def test_get_overdue_projects_excludes_deleted(self, app):
         """Soft-deleted projects are not shown as overdue."""
         with app.app_context():
-            yesterday = date.today() - timedelta(days=1)
+            yesterday = self._utc_today() - timedelta(days=1)
             project = self._create_project_with_deadline(yesterday)
             delete_project(project.id)
 
@@ -1087,8 +1091,8 @@ class TestDashboardFunctions:
     def test_get_overdue_projects_orders_by_deadline_asc(self, app):
         """Overdue projects are ordered by deadline ascending (most overdue first)."""
         with app.app_context():
-            three_days_ago = date.today() - timedelta(days=3)
-            one_day_ago = date.today() - timedelta(days=1)
+            three_days_ago = self._utc_today() - timedelta(days=3)
+            one_day_ago = self._utc_today() - timedelta(days=1)
             self._create_project_with_deadline(one_day_ago)
             self._create_project_with_deadline(three_days_ago)
 
@@ -1100,7 +1104,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_finds_upcoming(self, app):
         """Projects due within 7 days are found."""
         with app.app_context():
-            in_three_days = date.today() + timedelta(days=3)
+            in_three_days = self._utc_today() + timedelta(days=3)
             self._create_project_with_deadline(in_three_days)
 
             due_this_week = get_due_this_week()
@@ -1110,7 +1114,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_includes_today(self, app):
         """Projects due today are included in due this week."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             self._create_project_with_deadline(today)
 
             due_this_week = get_due_this_week()
@@ -1119,7 +1123,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_includes_day_seven(self, app):
         """Projects due exactly 7 days from now are included."""
         with app.app_context():
-            in_seven_days = date.today() + timedelta(days=7)
+            in_seven_days = self._utc_today() + timedelta(days=7)
             self._create_project_with_deadline(in_seven_days)
 
             due_this_week = get_due_this_week()
@@ -1128,7 +1132,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_excludes_overdue(self, app):
         """Overdue projects are not included in due this week."""
         with app.app_context():
-            yesterday = date.today() - timedelta(days=1)
+            yesterday = self._utc_today() - timedelta(days=1)
             self._create_project_with_deadline(yesterday)
 
             due_this_week = get_due_this_week()
@@ -1137,7 +1141,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_excludes_beyond_seven_days(self, app):
         """Projects due beyond 7 days are not in due this week."""
         with app.app_context():
-            in_eight_days = date.today() + timedelta(days=8)
+            in_eight_days = self._utc_today() + timedelta(days=8)
             self._create_project_with_deadline(in_eight_days)
 
             due_this_week = get_due_this_week()
@@ -1146,7 +1150,7 @@ class TestDashboardFunctions:
     def test_get_due_this_week_excludes_completed(self, app):
         """Completed projects are not included in due this week."""
         with app.app_context():
-            in_three_days = date.today() + timedelta(days=3)
+            in_three_days = self._utc_today() + timedelta(days=3)
             self._create_project_with_deadline(in_three_days, ProjectStatus.COMPLETED)
 
             due_this_week = get_due_this_week()
@@ -1155,7 +1159,7 @@ class TestDashboardFunctions:
     def test_get_longer_deadline_finds_future(self, app):
         """Projects due beyond 7 days are found."""
         with app.app_context():
-            in_ten_days = date.today() + timedelta(days=10)
+            in_ten_days = self._utc_today() + timedelta(days=10)
             self._create_project_with_deadline(in_ten_days)
 
             longer = get_longer_deadline()
@@ -1165,7 +1169,7 @@ class TestDashboardFunctions:
     def test_get_longer_deadline_excludes_this_week(self, app):
         """Projects due within 7 days are not in longer deadline."""
         with app.app_context():
-            in_five_days = date.today() + timedelta(days=5)
+            in_five_days = self._utc_today() + timedelta(days=5)
             self._create_project_with_deadline(in_five_days)
 
             longer = get_longer_deadline()
@@ -1174,7 +1178,7 @@ class TestDashboardFunctions:
     def test_get_longer_deadline_excludes_day_seven(self, app):
         """Projects due exactly 7 days from now are NOT in longer deadline."""
         with app.app_context():
-            in_seven_days = date.today() + timedelta(days=7)
+            in_seven_days = self._utc_today() + timedelta(days=7)
             self._create_project_with_deadline(in_seven_days)
 
             longer = get_longer_deadline()
@@ -1183,7 +1187,7 @@ class TestDashboardFunctions:
     def test_get_longer_deadline_excludes_completed(self, app):
         """Completed projects are not in longer deadline."""
         with app.app_context():
-            in_ten_days = date.today() + timedelta(days=10)
+            in_ten_days = self._utc_today() + timedelta(days=10)
             self._create_project_with_deadline(in_ten_days, ProjectStatus.COMPLETED)
 
             longer = get_longer_deadline()
@@ -1192,7 +1196,7 @@ class TestDashboardFunctions:
     def test_get_recently_completed_finds_completed(self, app):
         """Recently completed finds completed projects."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
 
             completed = get_recently_completed()
@@ -1202,7 +1206,7 @@ class TestDashboardFunctions:
     def test_get_recently_completed_excludes_in_progress(self, app):
         """In progress projects are not in recently completed."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             self._create_project_with_deadline(today, ProjectStatus.IN_PROGRESS)
 
             completed = get_recently_completed()
@@ -1211,7 +1215,7 @@ class TestDashboardFunctions:
     def test_get_recently_completed_orders_by_updated_at(self, app):
         """Recently completed returns projects ordered by updated_at desc."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             # Create two completed projects
             project1 = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
             project2 = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
@@ -1228,7 +1232,7 @@ class TestDashboardFunctions:
     def test_get_recently_completed_respects_limit(self, app):
         """Recently completed respects the limit parameter."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             # Create 15 completed projects
             for i in range(15):
                 create_project({
@@ -1253,7 +1257,7 @@ class TestDashboardFunctions:
     def test_get_recently_completed_excludes_deleted(self, app):
         """Soft-deleted completed projects are excluded."""
         with app.app_context():
-            today = date.today()
+            today = self._utc_today()
             project = self._create_project_with_deadline(today, ProjectStatus.COMPLETED)
             delete_project(project.id)
 
